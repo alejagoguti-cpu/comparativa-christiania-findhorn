@@ -12,7 +12,9 @@ import {
   Camera,
   Coins,
   Compass,
+  Download,
   Droplets,
+  Edit3,
   ExternalLink,
   Flame,
   History,
@@ -25,11 +27,14 @@ import {
   Pause,
   Play,
   Recycle,
+  RotateCcw,
   Scale,
   ShieldAlert,
+  Sliders,
   Sprout,
   Table2,
   Timer,
+  Upload,
   Users,
   Waves,
   Wind,
@@ -48,18 +53,47 @@ import {
   PHASES_CHR,
   PHASES_FND,
   SPINE,
-  STEP_LABELS,
   type BeatSpec,
+  type ChartKind,
   type GeoId,
+  type MatrixRow,
+  type Model,
   type ModelId,
 } from './content';
 import { CONNS, REL_TEXT, type Conn } from './conns';
-import { ACADEMIC_PAPERS, REAL_PHOTOS, getBeatEvidence } from './references';
+import { ACADEMIC_PAPERS, REAL_PHOTOS, getBeatEvidence, type AcademicPaper, type RealPhoto } from './references';
 import { DualMapView } from './mapview';
 import { DualTerritory3D, type Pad, type ViewFocus } from './territory3d';
 
 gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
 gsap.ticker.lagSmoothing(0);
+
+const STORAGE_KEY = 'christiania_findhorn_custom_v1';
+
+interface CustomOverrides {
+  models: Record<string, Partial<Model>>;
+  beats: Record<number, Partial<BeatSpec>>;
+  evidence: Record<number, { photo?: Partial<RealPhoto>; paper?: Partial<AcademicPaper> }>;
+  matrix: MatrixRow[];
+}
+
+function loadOverrides(): CustomOverrides {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      return {
+        models: parsed.models || {},
+        beats: parsed.beats || {},
+        evidence: parsed.evidence || {},
+        matrix: parsed.matrix || MATRIX_ROWS,
+      };
+    }
+  } catch {
+    // ignore storage errors
+  }
+  return { models: {}, beats: {}, evidence: {}, matrix: MATRIX_ROWS };
+}
 
 const ICONS: Record<ModelId, ReactElement> = {
   suj: <Compass />,
@@ -207,7 +241,10 @@ export default function App() {
   const [secInBeat, setSecInBeat] = useState(0);
   const [sel, setSel] = useState<ModelId | null>(null);
   const [showMatrix, setShowMatrix] = useState(false);
-  const [zoomPhoto, setZoomPhoto] = useState<string | null>(null);
+  const [editMode, setEditMode] = useState(false);
+  const [showDrawer, setShowDrawer] = useState(false);
+  const [overrides, setOverrides] = useState<CustomOverrides>(() => loadOverrides());
+  const [zoomPhoto, setZoomPhoto] = useState<RealPhoto | null>(null);
   const [focusOverride, setFocusOverride] = useState<ViewFocus | null>(null);
   const [size, setSize] = useState({ W: window.innerWidth, H: window.innerHeight });
   const [mapOk, setMapOk] = useState(false);
@@ -216,6 +253,7 @@ export default function App() {
   const { W, H } = size;
   const m = W < 960;
 
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const mapWrapRef = useRef<HTMLDivElement>(null);
   const mapChrEl = useRef<HTMLDivElement>(null);
@@ -233,6 +271,116 @@ export default function App() {
   const prevOn = useRef<Set<string>>(new Set());
   const inited = useRef(false);
   const shape = useRef<Record<string, string>>({});
+
+  // Persistir cambios automáticamente en localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(overrides));
+    } catch {
+      // ignore quota errors
+    }
+  }, [overrides]);
+
+  // Helpers para actualizar cualquier texto, cifra, foto o cita en vivo
+  const updateBeat = useCallback((idx: number, patch: Partial<BeatSpec>) => {
+    setOverrides((prev) => ({
+      ...prev,
+      beats: { ...prev.beats, [idx]: { ...(prev.beats[idx] || {}), ...patch } },
+    }));
+  }, []);
+
+  const updateModel = useCallback((id: ModelId, patch: Partial<Model>) => {
+    setOverrides((prev) => ({
+      ...prev,
+      models: { ...prev.models, [id]: { ...(prev.models[id] || {}), ...patch } },
+    }));
+  }, []);
+
+  const updateEvidence = useCallback(
+    (idx: number, kind: 'photo' | 'paper', patch: Partial<RealPhoto> | Partial<AcademicPaper>) => {
+      setOverrides((prev) => {
+        const cur = prev.evidence[idx] || {};
+        return {
+          ...prev,
+          evidence: {
+            ...prev.evidence,
+            [idx]: {
+              ...cur,
+              [kind]: { ...(cur[kind] || {}), ...patch },
+            },
+          },
+        };
+      });
+    },
+    [],
+  );
+
+  const updateMatrixCell = useCallback((rowIdx: number, field: keyof MatrixRow, value: string) => {
+    setOverrides((prev) => {
+      const next = prev.matrix.map((r, i) => (i === rowIdx ? { ...r, [field]: value } : r));
+      return { ...prev, matrix: next };
+    });
+  }, []);
+
+  const resetAllOverrides = () => {
+    localStorage.removeItem(STORAGE_KEY);
+    setOverrides({ models: {}, beats: {}, evidence: {}, matrix: MATRIX_ROWS });
+  };
+
+  const exportOverridesJson = () => {
+    const blob = new Blob([JSON.stringify(overrides, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'christiania-findhorn-edicion.json';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const importOverridesJson = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const parsed = JSON.parse(String(reader.result));
+        setOverrides({
+          models: parsed.models || {},
+          beats: parsed.beats || {},
+          evidence: parsed.evidence || {},
+          matrix: parsed.matrix || MATRIX_ROWS,
+        });
+      } catch {
+        alert('El archivo JSON no tiene un formato válido.');
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  // Datos combinados (base + ediciones del usuario)
+  const mergedModels: Model[] = useMemo(
+    () => MODELS.map((mod) => ({ ...mod, ...(overrides.models[mod.id] || {}) })),
+    [overrides.models],
+  );
+
+  const curBeat: BeatSpec = useMemo(() => {
+    const base = BEATS[beat] || BEATS[0];
+    const ov = overrides.beats[beat] || {};
+    return {
+      ...base,
+      ...ov,
+      series: ov.series || base.series,
+    };
+  }, [beat, overrides.beats]);
+
+  const curEvidence = useMemo(() => {
+    const base = getBeatEvidence(beat);
+    const ov = overrides.evidence[beat] || {};
+    return {
+      photo: { ...base.photo, ...(ov.photo || {}) },
+      paper: { ...base.paper, ...(ov.paper || {}) },
+    };
+  }, [beat, overrides.evidence]);
 
   const go = useCallback((n: number) => {
     n = Math.max(0, Math.min(N - 1, n));
@@ -254,7 +402,7 @@ export default function App() {
     });
   }, []);
 
-  // Cronómetro automático de 20 minutos: avanza al siguiente plano y gráfica exactamente cada 30 segundos
+  // Cronómetro automático de 20 minutos: avanza cada 30 segundos
   useEffect(() => {
     if (!autoPlay) return;
     const iv = setInterval(() => {
@@ -275,9 +423,16 @@ export default function App() {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      // No interceptar flechas ni espacio si el usuario está escribiendo o editando un texto
+      const tag = (e.target as HTMLElement)?.tagName;
+      const isEditingText =
+        (e.target as HTMLElement)?.isContentEditable || tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
+      if (isEditingText) return;
+
       if (e.key === 'Escape') {
         if (zoomPhoto) setZoomPhoto(null);
         else if (showMatrix) setShowMatrix(false);
+        else if (showDrawer) setShowDrawer(false);
         else setSel(null);
         return;
       }
@@ -298,7 +453,7 @@ export default function App() {
       removeEventListener('keydown', onKey);
       removeEventListener('resize', onResize);
     };
-  }, [go, showMatrix, zoomPhoto]);
+  }, [go, showMatrix, zoomPhoto, showDrawer]);
 
   useLayoutEffect(() => {
     const st = ScrollTrigger.create({
@@ -417,9 +572,6 @@ export default function App() {
     [beat, sel],
   );
   const related = (c: Conn) => !sel || c.models.includes(sel);
-
-  const curBeat: BeatSpec = BEATS[beat] || BEATS[0];
-  const curEvidence = useMemo(() => getBeatEvidence(beat), [beat]);
 
   const geoColor = useMemo(() => {
     const g: Record<string, string> = {};
@@ -567,7 +719,6 @@ export default function App() {
     return () => gsap.ticker.remove(tick);
   }, [mapOk]);
 
-  // Destello viajero por cada nuevo plano de 30s
   useEffect(() => {
     const now = new Set(conns.filter(related).map((c) => c.id));
     const svg = svgRef.current;
@@ -598,6 +749,7 @@ export default function App() {
 
   const onCard = (e: React.MouseEvent, id: ModelId) => {
     e.stopPropagation();
+    if (editMode) return; // En modo edición el clic permite editar el texto directamente
     ripple(e, MODEL[id].color);
     if (beat === N - 1) {
       setSel(sel === id ? null : id);
@@ -614,7 +766,7 @@ export default function App() {
   return (
     <>
       <div ref={spacerRef} style={{ height: N * 100 + 'vh' }} aria-hidden />
-      <div id="stage" ref={stageRef} onClick={() => setSel(null)}>
+      <div id="stage" ref={stageRef} className={editMode ? 'edit-active' : ''} onClick={() => setSel(null)}>
         <div
           id="map-wrap"
           ref={mapWrapRef}
@@ -631,12 +783,24 @@ export default function App() {
         <div id="k3d" ref={k3El} style={{ opacity: 1 }} />
         <div id="wash" style={{ opacity: 1 }} />
 
-        {/* Banner superior del Plano 3D activo en este intervalo de 30s */}
-        <div id="plan-banner">
-          <div className="p-code">
-            [{curBeat.timeRange}] · {curBeat.planCode} · VISTA {camState.focus === 'dual' ? 'SIMULTÁNEA 3D' : camState.focus === 'chr' ? '3D CHRISTIANIA (DK)' : '3D FINDHORN (UK)'}
+        {/* Banner superior del Plano 3D activo (editable directamente cuando EditMode está activo) */}
+        <div id="plan-banner" style={{ pointerEvents: editMode ? 'auto' : 'none' }}>
+          <div
+            className="p-code"
+            contentEditable={editMode}
+            suppressContentEditableWarning
+            onBlur={(e) => updateBeat(beat, { planCode: e.currentTarget.textContent || '' })}
+          >
+            {curBeat.planCode}
           </div>
-          <div className="p-title">{curBeat.planTitle}</div>
+          <div
+            className="p-title"
+            contentEditable={editMode}
+            suppressContentEditableWarning
+            onBlur={(e) => updateBeat(beat, { planTitle: e.currentTarget.textContent || '' })}
+          >
+            {curBeat.planTitle}
+          </div>
         </div>
 
         {/* Insignias para conmutar enfoque 3D entre ambos casos */}
@@ -734,26 +898,61 @@ export default function App() {
           ))}
         </svg>
 
-        {/* Columna izquierda: 7 Dimensiones Estructurales */}
-        {MODELS.map((mod) => (
+        {/* Columna izquierda: 7 Dimensiones Estructurales (Editables en vivo con clic cuando EditMode está activo) */}
+        {mergedModels.map((mod) => (
           <div
             key={mod.id}
             ref={(e) => { cards.current[mod.id] = e; }}
             data-id={mod.id}
             className={'abs node d1 on mm-' + mod.id + (sel === mod.id ? ' sel' : '') + (shape.current[mod.id] || '')}
-            style={{ ['--c' as string]: mod.color, ['--ink' as string]: mod.ink, opacity: 0, cursor: 'pointer' }}
+            style={{ ['--c' as string]: mod.color, ['--ink' as string]: mod.ink, opacity: 0, cursor: editMode ? 'text' : 'pointer' }}
             onClick={(e) => onCard(e, mod.id)}
           >
             <div className="wm">{ICONS[mod.id]}</div>
             <div className="tile">{ICONS[mod.id]}</div>
             <div className="txt">
-              <div className="id">BLOQUE {mod.n} · {mod.role}</div>
-              <div className="lb">{mod.title}</div>
+              <div
+                className="id"
+                contentEditable={editMode}
+                suppressContentEditableWarning
+                onBlur={(e) => updateModel(mod.id, { role: e.currentTarget.textContent || '' })}
+              >
+                {mod.role}
+              </div>
+              <div
+                className="lb"
+                contentEditable={editMode}
+                suppressContentEditableWarning
+                onBlur={(e) => updateModel(mod.id, { title: e.currentTarget.textContent || '' })}
+              >
+                {mod.title}
+              </div>
               <div className="lbs">{mod.short}</div>
-              <p className="dsc">{mod.text}</p>
+              <p
+                className="dsc"
+                contentEditable={editMode}
+                suppressContentEditableWarning
+                onBlur={(e) => updateModel(mod.id, { text: e.currentTarget.textContent || '' })}
+              >
+                {mod.text}
+              </p>
               <div className="dual-badges">
-                <span className="tag">🇩🇰 {mod.chrBadge}</span>
-                <span className="tag">🏴󠁧󠁢󠁳󠁣󠁴󠁿 {mod.fndBadge}</span>
+                <span
+                  className="tag"
+                  contentEditable={editMode}
+                  suppressContentEditableWarning
+                  onBlur={(e) => updateModel(mod.id, { chrBadge: (e.currentTarget.textContent || '').replace(/^🇩🇰\s*/, '') })}
+                >
+                  🇩🇰 {mod.chrBadge}
+                </span>
+                <span
+                  className="tag"
+                  contentEditable={editMode}
+                  suppressContentEditableWarning
+                  onBlur={(e) => updateModel(mod.id, { fndBadge: (e.currentTarget.textContent || '').replace(/^🏴󠁧󠁢󠁳󠁣󠁴󠁿\s*/, '') })}
+                >
+                  🏴󠁧󠁢󠁳󠁣󠁴󠁿 {mod.fndBadge}
+                </span>
               </div>
               {mod.tags && (
                 <div className="chain">
@@ -766,7 +965,7 @@ export default function App() {
           </div>
         ))}
 
-        {/* HUD Derecho: Gráfica Dinámica 30s + Fotografía Real + Paper Académico con Cita */}
+        {/* HUD Derecho: Gráfica Dinámica 30s + Fotografía Real + Paper Académico con Cita (Todo editable en vivo) */}
         <div id="hud-right" onClick={(e) => e.stopPropagation()}>
           {/* 1. Tarjeta de Gráfica / Diagrama Cuantitativo del Segmento de 30s */}
           <div className="hud-card">
@@ -776,19 +975,43 @@ export default function App() {
               </span>
               <span className="hud-time-pill">{curBeat.timeRange}</span>
             </div>
-            <div className="hud-title">{curBeat.chartTitle}</div>
-            <div className="hud-sub">
-              {curBeat.chartSub} · <em>Fuente: {curEvidence.paper.shortCite}</em>
+            <div
+              className="hud-title"
+              contentEditable={editMode}
+              suppressContentEditableWarning
+              onBlur={(e) => updateBeat(beat, { chartTitle: e.currentTarget.textContent || '' })}
+            >
+              {curBeat.chartTitle}
+            </div>
+            <div
+              className="hud-sub"
+              contentEditable={editMode}
+              suppressContentEditableWarning
+              onBlur={(e) => updateBeat(beat, { chartSub: e.currentTarget.textContent || '' })}
+            >
+              {curBeat.chartSub}
             </div>
 
             <div className="kpi-row">
               <div className="kpi-box chr">
                 <small>🇩🇰 Freetown Christiania</small>
-                {curBeat.kpiChr}
+                <span
+                  contentEditable={editMode}
+                  suppressContentEditableWarning
+                  onBlur={(e) => updateBeat(beat, { kpiChr: e.currentTarget.textContent || '' })}
+                >
+                  {curBeat.kpiChr}
+                </span>
               </div>
               <div className="kpi-box fnd">
                 <small>🏴󠁧󠁢󠁳󠁣󠁴󠁿 Ecoaldea Findhorn</small>
-                {curBeat.kpiFnd}
+                <span
+                  contentEditable={editMode}
+                  suppressContentEditableWarning
+                  onBlur={(e) => updateBeat(beat, { kpiFnd: e.currentTarget.textContent || '' })}
+                >
+                  {curBeat.kpiFnd}
+                </span>
               </div>
             </div>
 
@@ -796,7 +1019,14 @@ export default function App() {
               <DynamicChartSvg spec={curBeat} cite={curEvidence.paper.shortCite} />
             </div>
 
-            <div className="chart-note">{curBeat.note}</div>
+            <div
+              className="chart-note"
+              contentEditable={editMode}
+              suppressContentEditableWarning
+              onBlur={(e) => updateBeat(beat, { note: e.currentTarget.textContent || '' })}
+            >
+              {curBeat.note}
+            </div>
           </div>
 
           {/* 2. Tarjeta de Evidencia Fotográfica Real y Paper Científico con Cita APA/DOI */}
@@ -811,15 +1041,27 @@ export default function App() {
             <div className="evidence-grid">
               <div
                 className="photo-frame"
-                onClick={() => setZoomPhoto(curEvidence.photo.id)}
+                onClick={() => setZoomPhoto(curEvidence.photo)}
                 title="Haz clic para ampliar fotografía real verificada"
               >
                 <img src={curEvidence.photo.url} alt={curEvidence.photo.caption} loading="eager" />
                 <div className="photo-tag">{curEvidence.photo.year}</div>
               </div>
               <div className="photo-meta">
-                <div className="photo-cap">{curEvidence.photo.caption}</div>
-                <div className="photo-cred">
+                <div
+                  className="photo-cap"
+                  contentEditable={editMode}
+                  suppressContentEditableWarning
+                  onBlur={(e) => updateEvidence(beat, 'photo', { caption: e.currentTarget.textContent || '' })}
+                >
+                  {curEvidence.photo.caption}
+                </div>
+                <div
+                  className="photo-cred"
+                  contentEditable={editMode}
+                  suppressContentEditableWarning
+                  onBlur={(e) => updateEvidence(beat, 'photo', { location: e.currentTarget.textContent || '' })}
+                >
                   📍 {curEvidence.photo.location} · {curEvidence.photo.credit}
                 </div>
               </div>
@@ -829,27 +1071,226 @@ export default function App() {
               <div className="hud-kicker" style={{ color: '#6ea8d6' }}>
                 <BookOpen /> PAPER / REFERENCIA ACADÉMICA ({curEvidence.paper.year})
               </div>
-              <div className="paper-cite">{curEvidence.paper.citation}</div>
-              <div className="paper-finding">{curEvidence.paper.finding}</div>
-              <a
-                className="paper-link"
-                href={curEvidence.paper.doiOrUrl}
-                target="_blank"
-                rel="noreferrer"
+              <div
+                className="paper-cite"
+                contentEditable={editMode}
+                suppressContentEditableWarning
+                onBlur={(e) => updateEvidence(beat, 'paper', { citation: e.currentTarget.textContent || '' })}
               >
+                {curEvidence.paper.citation}
+              </div>
+              <div
+                className="paper-finding"
+                contentEditable={editMode}
+                suppressContentEditableWarning
+                onBlur={(e) => updateEvidence(beat, 'paper', { finding: e.currentTarget.textContent || '' })}
+              >
+                {curEvidence.paper.finding}
+              </div>
+              <a className="paper-link" href={curEvidence.paper.doiOrUrl} target="_blank" rel="noreferrer">
                 <ExternalLink size={11} /> Ver fuente / DOI: {curEvidence.paper.shortCite}
               </a>
             </div>
           </div>
         </div>
 
+        {/* Panel Lateral Completo de Edición de Textos, Cifras de la Gráfica, Foto y Paper del Paso Actual */}
+        {showDrawer && (
+          <div id="editor-drawer" onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <div className="kick" style={{ color: '#7fbf8e' }}>EDITOR EN VIVO · PLANO {beat + 1}/40 ({curBeat.timeRange})</div>
+                <h3 style={{ font: '700 16px var(--sans)', color: '#fff' }}>Personalizar Textos, Gráfica, Foto y Cita</h3>
+              </div>
+              <button className="btn" onClick={() => setShowDrawer(false)}>
+                <X />Cerrar
+              </button>
+            </div>
+
+            <div className="ed-group">
+              <label>Título de la Secuencia (Barra inferior)</label>
+              <input
+                className="ed-input"
+                value={curBeat.title}
+                onChange={(e) => updateBeat(beat, { title: e.target.value })}
+              />
+            </div>
+
+            <div className="ed-row2">
+              <div className="ed-group">
+                <label>Código del Plano 3D</label>
+                <input
+                  className="ed-input"
+                  value={curBeat.planCode}
+                  onChange={(e) => updateBeat(beat, { planCode: e.target.value })}
+                />
+              </div>
+              <div className="ed-group">
+                <label>Tipo de Gráfica</label>
+                <select
+                  className="ed-select"
+                  value={curBeat.chartKind}
+                  onChange={(e) => updateBeat(beat, { chartKind: e.target.value as ChartKind })}
+                >
+                  <option value="bars">Barras Comparativas</option>
+                  <option value="radar">Radar Multidimensional</option>
+                  <option value="donut">Anillos (Donut %)</option>
+                  <option value="timeline">Línea de Tiempo</option>
+                  <option value="stacked">Barras Apiladas</option>
+                  <option value="gauge">Indicador Escala</option>
+                  <option value="sankey">Flujo / Balance</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="ed-group">
+              <label>Subtítulo del Plano 3D</label>
+              <input
+                className="ed-input"
+                value={curBeat.planTitle}
+                onChange={(e) => updateBeat(beat, { planTitle: e.target.value })}
+              />
+            </div>
+
+            <div className="ed-row2">
+              <div className="ed-group">
+                <label>KPI 🇩🇰 Christiania</label>
+                <input
+                  className="ed-input"
+                  value={curBeat.kpiChr}
+                  onChange={(e) => updateBeat(beat, { kpiChr: e.target.value })}
+                />
+              </div>
+              <div className="ed-group">
+                <label>KPI 🏴󠁧󠁢󠁳󠁣󠁴󠁿 Findhorn</label>
+                <input
+                  className="ed-input"
+                  value={curBeat.kpiFnd}
+                  onChange={(e) => updateBeat(beat, { kpiFnd: e.target.value })}
+                />
+              </div>
+            </div>
+
+            <div className="ed-group">
+              <label>Valores Numéricos de la Gráfica (Etiqueta | DK | UK | Unidad)</label>
+              {curBeat.series.map((sItem, sIdx) => (
+                <div key={sIdx} className="ed-series-row">
+                  <input
+                    className="ed-input"
+                    value={sItem.label}
+                    onChange={(e) => {
+                      const next = curBeat.series.map((x, k) => (k === sIdx ? { ...x, label: e.target.value } : x));
+                      updateBeat(beat, { series: next });
+                    }}
+                  />
+                  <input
+                    type="number"
+                    className="ed-input"
+                    value={sItem.chr}
+                    onChange={(e) => {
+                      const next = curBeat.series.map((x, k) => (k === sIdx ? { ...x, chr: parseFloat(e.target.value) || 0 } : x));
+                      updateBeat(beat, { series: next });
+                    }}
+                  />
+                  <input
+                    type="number"
+                    className="ed-input"
+                    value={sItem.fnd}
+                    onChange={(e) => {
+                      const next = curBeat.series.map((x, k) => (k === sIdx ? { ...x, fnd: parseFloat(e.target.value) || 0 } : x));
+                      updateBeat(beat, { series: next });
+                    }}
+                  />
+                  <input
+                    className="ed-input"
+                    placeholder="unid."
+                    value={sItem.unit || ''}
+                    onChange={(e) => {
+                      const next = curBeat.series.map((x, k) => (k === sIdx ? { ...x, unit: e.target.value } : x));
+                      updateBeat(beat, { series: next });
+                    }}
+                  />
+                </div>
+              ))}
+            </div>
+
+            <div className="ed-group">
+              <label>Nota Analítica del Gráfico</label>
+              <textarea
+                className="ed-textarea"
+                value={curBeat.note}
+                onChange={(e) => updateBeat(beat, { note: e.target.value })}
+              />
+            </div>
+
+            <div className="ed-group">
+              <label>URL de Fotografía Real (Wikimedia o URL propia)</label>
+              <input
+                className="ed-input"
+                value={curEvidence.photo.url}
+                onChange={(e) => updateEvidence(beat, 'photo', { url: e.target.value })}
+              />
+            </div>
+
+            <div className="ed-group">
+              <label>Pie de Foto</label>
+              <textarea
+                className="ed-textarea"
+                value={curEvidence.photo.caption}
+                onChange={(e) => updateEvidence(beat, 'photo', { caption: e.target.value })}
+              />
+            </div>
+
+            <div className="ed-group">
+              <label>Cita Académica (APA 7)</label>
+              <textarea
+                className="ed-textarea"
+                value={curEvidence.paper.citation}
+                onChange={(e) => updateEvidence(beat, 'paper', { citation: e.target.value })}
+              />
+            </div>
+
+            <div className="ed-row2">
+              <div className="ed-group">
+                <label>Autor Corto (ej. Sherry, 2019)</label>
+                <input
+                  className="ed-input"
+                  value={curEvidence.paper.shortCite}
+                  onChange={(e) => updateEvidence(beat, 'paper', { shortCite: e.target.value })}
+                />
+              </div>
+              <div className="ed-group">
+                <label>Enlace DOI / URL del Paper</label>
+                <input
+                  className="ed-input"
+                  value={curEvidence.paper.doiOrUrl}
+                  onChange={(e) => updateEvidence(beat, 'paper', { doiOrUrl: e.target.value })}
+                />
+              </div>
+            </div>
+
+            <div className="ed-actions">
+              <button className="btn" onClick={exportOverridesJson} title="Descargar tus cambios en un archivo JSON">
+                <Download />Exportar JSON
+              </button>
+              <button className="btn" onClick={() => fileInputRef.current?.click()} title="Cargar un archivo JSON de cambios">
+                <Upload />Importar JSON
+              </button>
+              <input ref={fileInputRef} type="file" accept=".json" style={{ display: 'none' }} onChange={importOverridesJson} />
+              <button className="btn" onClick={resetAllOverrides} title="Restaurar todos los textos y datos originales">
+                <RotateCcw />Restaurar Original
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Lightbox para ampliar la fotografía real */}
-        {zoomPhoto && REAL_PHOTOS[zoomPhoto] && (
+        {zoomPhoto && (
           <div id="photo-lightbox" onClick={() => setZoomPhoto(null)}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
               <div>
                 <div className="kick">ARCHIVO FOTOGRÁFICO REAL VERIFICADO</div>
-                <h3 style={{ font: '700 18px var(--sans)', color: '#fff' }}>{REAL_PHOTOS[zoomPhoto].location}</h3>
+                <h3 style={{ font: '700 18px var(--sans)', color: '#fff' }}>{zoomPhoto.location}</h3>
               </div>
               <button className="btn" onClick={() => setZoomPhoto(null)}>
                 <X />Cerrar
@@ -857,29 +1298,34 @@ export default function App() {
             </div>
             <div style={{ display: 'flex', justifyContent: 'center', background: '#000', borderRadius: 12, padding: 12, border: '1px solid #252525' }}>
               <img
-                src={REAL_PHOTOS[zoomPhoto].url}
-                alt={REAL_PHOTOS[zoomPhoto].caption}
+                src={zoomPhoto.url}
+                alt={zoomPhoto.caption}
                 style={{ maxHeight: '62vh', maxWidth: '100%', borderRadius: 8, objectFit: 'contain' }}
               />
             </div>
-            <p style={{ marginTop: 12, font: '400 14px/1.45 var(--sans)', color: '#ddd' }}>{REAL_PHOTOS[zoomPhoto].caption}</p>
-            <p style={{ marginTop: 4, font: '400 11px var(--mono)', color: '#8e8e8e' }}>{REAL_PHOTOS[zoomPhoto].credit}</p>
+            <p style={{ marginTop: 12, font: '400 14px/1.45 var(--sans)', color: '#ddd' }}>{zoomPhoto.caption}</p>
+            <p style={{ marginTop: 4, font: '400 11px var(--mono)', color: '#8e8e8e' }}>{zoomPhoto.credit}</p>
           </div>
         )}
 
-        {/* Modal de Matriz 1.1, Periodización y Bibliografía Completa */}
+        {/* Modal de Matriz 1.1 (también editable en vivo cuando EditMode está activo) */}
         {showMatrix && (
           <div id="matrix-modal" onClick={(e) => e.stopPropagation()}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
               <div>
                 <div className="kick">SECCIÓN 1.1 · MATRIZ COMPARATIVA, PERIODIZACIÓN Y PAPERS CIENTÍFICOS</div>
                 <h2 style={{ font: '700 19px var(--sans)', color: '#fff', marginTop: 2 }}>
-                  Ficha Técnica, Delimitación Territorial y Corpus Bibliográfico
+                  Ficha Técnica, Delimitación Territorial y Corpus Bibliográfico {editMode ? '(Modo Edición Activo)' : ''}
                 </h2>
               </div>
-              <button className="btn" onClick={() => setShowMatrix(false)}>
-                <X />Cerrar
-              </button>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button className={'btn' + (editMode ? ' pri act' : '')} onClick={() => setEditMode(!editMode)}>
+                  <Edit3 />{editMode ? 'Terminar Edición' : 'Editar Celdas'}
+                </button>
+                <button className="btn" onClick={() => setShowMatrix(false)}>
+                  <X />Cerrar
+                </button>
+              </div>
             </div>
 
             <table className="mtx-grid">
@@ -891,11 +1337,29 @@ export default function App() {
                 </tr>
               </thead>
               <tbody>
-                {MATRIX_ROWS.map((r) => (
-                  <tr key={r.criterio}>
-                    <td>{r.criterio}</td>
-                    <td>{r.chr}</td>
-                    <td>{r.fnd}</td>
+                {overrides.matrix.map((r, rIdx) => (
+                  <tr key={rIdx}>
+                    <td
+                      contentEditable={editMode}
+                      suppressContentEditableWarning
+                      onBlur={(e) => updateMatrixCell(rIdx, 'criterio', e.currentTarget.textContent || '')}
+                    >
+                      {r.criterio}
+                    </td>
+                    <td
+                      contentEditable={editMode}
+                      suppressContentEditableWarning
+                      onBlur={(e) => updateMatrixCell(rIdx, 'chr', e.currentTarget.textContent || '')}
+                    >
+                      {r.chr}
+                    </td>
+                    <td
+                      contentEditable={editMode}
+                      suppressContentEditableWarning
+                      onBlur={(e) => updateMatrixCell(rIdx, 'fnd', e.currentTarget.textContent || '')}
+                    >
+                      {r.fnd}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -945,7 +1409,7 @@ export default function App() {
           </div>
         )}
 
-        {/* Barra Superior con Cronómetro de Exposición de 20 Minutos (40 x 30s) */}
+        {/* Barra Superior con Cronómetro de Exposición de 20 Minutos + Controles de Edición en Vivo */}
         <div id="bar">
           <div id="brand">
             <div className="logo"><Network /></div>
@@ -971,6 +1435,24 @@ export default function App() {
           >
             {autoPlay ? <Pause /> : <Play />}
             <span className="bt">{autoPlay ? 'Pausar 30s' : 'Auto 30s (20m)'}</span>
+          </button>
+
+          <button
+            className={'btn' + (editMode ? ' pri act' : '')}
+            onClick={() => setEditMode(!editMode)}
+            title="Activar edición directa haciendo clic sobre cualquier texto en pantalla"
+          >
+            <Edit3 />
+            <span className="bt">{editMode ? 'Editando Textos' : 'Editar Textos'}</span>
+          </button>
+
+          <button
+            className={'btn' + (showDrawer ? ' pri act' : '')}
+            onClick={() => setShowDrawer(!showDrawer)}
+            title="Abrir panel para editar cifras de las gráficas, cambiar fotos o importar/exportar JSON"
+          >
+            <Sliders />
+            <span className="bt">Datos &amp; Fotos</span>
           </button>
 
           <button
@@ -1018,11 +1500,11 @@ export default function App() {
           </button>
           <div className="steps">
             <div className="ticks">
-              {STEP_LABELS.map((s, i) => (
+              {BEATS.map((bItem, i) => (
                 <span
-                  key={s}
+                  key={bItem.index}
                   onClick={() => go(i)}
-                  title={`Plano ${i + 1}/40 (${s})`}
+                  title={`Plano ${i + 1}/40 (${bItem.timeRange} · ${bItem.title})`}
                   style={{
                     height: i === beat ? 16 : i % 5 === 0 ? 11 : 6,
                     background: i === beat ? '#7fbf8e' : i < beat ? '#f0f0f0' : '#383838',
@@ -1030,7 +1512,12 @@ export default function App() {
                 />
               ))}
             </div>
-            <span className="kick hidemob">
+            <span
+              className="kick hidemob"
+              contentEditable={editMode}
+              suppressContentEditableWarning
+              onBlur={(e) => updateBeat(beat, { title: e.currentTarget.textContent || '' })}
+            >
               PLANO {String(beat + 1).padStart(2, '0')}/40 · [{curBeat.timeRange}] · {curBeat.title}
             </span>
           </div>
@@ -1187,7 +1674,6 @@ function DynamicChartSvg({ spec, cite }: { spec: BeatSpec; cite: string }) {
     );
   }
 
-  // Default: Barras comparativas horizontales con indicadores numéricos y unidades
   const maxVal = Math.max(...s.flatMap((x) => [x.chr, x.fnd]), 1);
   return (
     <svg width="100%" height={H} viewBox={`0 0 ${W} ${H}`}>
