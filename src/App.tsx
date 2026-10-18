@@ -64,6 +64,7 @@ import { CONNS, REL_TEXT, type Conn } from './conns';
 import { ACADEMIC_PAPERS, REAL_PHOTOS, getBeatEvidence, type AcademicPaper, type RealPhoto } from './references';
 import { DualMapView } from './mapview';
 import { DualTerritory3D, type Pad, type ViewFocus } from './territory3d';
+import { PremiumChart } from './PremiumChart';
 
 gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
 gsap.ticker.lagSmoothing(0);
@@ -1015,9 +1016,11 @@ export default function App() {
               </div>
             </div>
 
-            <div className="chart-stage">
-              <DynamicChartSvg spec={curBeat} cite={curEvidence.paper.shortCite} />
-            </div>
+            <PremiumChart
+              spec={curBeat}
+              cite={curEvidence.paper.shortCite}
+              onChangeKind={(k) => updateBeat(beat, { chartKind: k })}
+            />
 
             <div
               className="chart-note"
@@ -1534,171 +1537,6 @@ function isRelated(sel: ModelId, id: ModelId) {
   if (sel === id) return true;
   if (sel === 'suj' || sel === 'econ' || sel === 'meta') return true;
   return REL_TEXT[sel].rel.some(([r]) => r === id);
-}
-
-// ------------------------------------------------------------ Renderizador SVG de Diagramas y Gráficas Reales con Cita
-function DynamicChartSvg({ spec, cite }: { spec: BeatSpec; cite: string }) {
-  const W = 340;
-  const H = 138;
-  const s = spec.series;
-  const kind = spec.chartKind;
-
-  if (kind === 'radar') {
-    const cx = 110;
-    const cy = 68;
-    const R = 48;
-    const n = s.length;
-    const pt = (i: number, val: number) => {
-      const a = -Math.PI / 2 + (i * Math.PI * 2) / n;
-      const r = (Math.min(100, Math.max(5, val)) / 100) * R;
-      return `${(cx + r * Math.cos(a)).toFixed(1)},${(cy + r * Math.sin(a)).toFixed(1)}`;
-    };
-    const polyChr = s.map((item, i) => pt(i, item.chr)).join(' ');
-    const polyFnd = s.map((item, i) => pt(i, item.fnd)).join(' ');
-
-    return (
-      <svg width="100%" height={H} viewBox={`0 0 ${W} ${H}`}>
-        {[0.35, 0.7, 1].map((f) => (
-          <circle key={f} cx={cx} cy={cy} r={R * f} fill="none" stroke="#252530" strokeDasharray="2 3" />
-        ))}
-        {s.map((item, i) => {
-          const a = -Math.PI / 2 + (i * Math.PI * 2) / n;
-          const x2 = cx + R * Math.cos(a);
-          const y2 = cy + R * Math.sin(a);
-          return <line key={item.label} x1={cx} y1={cy} x2={x2} y2={y2} stroke="#2a2a35" />;
-        })}
-        <polygon points={polyChr} fill="rgba(230,149,106,0.28)" stroke="#e6956a" strokeWidth="2" />
-        <polygon points={polyFnd} fill="rgba(127,191,142,0.28)" stroke="#7fbf8e" strokeWidth="2" />
-        {s.map((item, i) => (
-          <g key={item.label} transform={`translate(182, ${18 + i * 28})`}>
-            <text x="0" y="0" fill="#ccc" fontSize="9.5" fontFamily="var(--sans)">{item.label}</text>
-            <text x="0" y="12" fill="#e6956a" fontSize="9" fontFamily="var(--mono)">DK: {item.chr}%</text>
-            <text x="64" y="12" fill="#7fbf8e" fontSize="9" fontFamily="var(--mono)">UK: {item.fnd}%</text>
-          </g>
-        ))}
-        <text x={cx} y={H - 3} textAnchor="middle" fill="#777" fontSize="8" fontFamily="var(--mono)">{cite}</text>
-      </svg>
-    );
-  }
-
-  if (kind === 'donut') {
-    const colorsChr = ['#e6956a', '#cdae67', '#6ea8d6'];
-    const colorsFnd = ['#7fbf8e', '#6ea8d6', '#ebe5d9'];
-    const r = 34;
-    const circ = 2 * Math.PI * r;
-    let acc1 = 0;
-    let acc2 = 0;
-    return (
-      <svg width="100%" height={H} viewBox={`0 0 ${W} ${H}`}>
-        <g transform="translate(55, 62)">
-          <circle r={r} fill="none" stroke="#1d1d24" strokeWidth="12" />
-          {s.map((item, i) => {
-            const len = (item.chr / 100) * circ;
-            const dash = `${len} ${circ - len}`;
-            const off = -acc1;
-            acc1 += len;
-            return (
-              <circle
-                key={item.label}
-                r={r}
-                fill="none"
-                stroke={colorsChr[i % 3]}
-                strokeWidth="12"
-                strokeDasharray={dash}
-                strokeDashoffset={off}
-                transform="rotate(-90)"
-              />
-            );
-          })}
-          <text x="0" y="4" textAnchor="middle" fill="#e6956a" fontSize="10" fontWeight="700" fontFamily="var(--mono)">DK</text>
-        </g>
-        <g transform="translate(142, 62)">
-          <circle r={r} fill="none" stroke="#1d1d24" strokeWidth="12" />
-          {s.map((item, i) => {
-            const len = (item.fnd / 100) * circ;
-            const dash = `${len} ${circ - len}`;
-            const off = -acc2;
-            acc2 += len;
-            return (
-              <circle
-                key={item.label}
-                r={r}
-                fill="none"
-                stroke={colorsFnd[i % 3]}
-                strokeWidth="12"
-                strokeDasharray={dash}
-                strokeDashoffset={off}
-                transform="rotate(-90)"
-              />
-            );
-          })}
-          <text x="0" y="4" textAnchor="middle" fill="#7fbf8e" fontSize="10" fontWeight="700" fontFamily="var(--mono)">UK</text>
-        </g>
-        {s.map((item, i) => (
-          <g key={item.label} transform={`translate(192, ${24 + i * 34})`}>
-            <rect x="0" y="-8" width="8" height="8" rx="2" fill={colorsChr[i % 3]} />
-            <text x="12" y="-1" fill="#ddd" fontSize="9.5" fontFamily="var(--sans)">{item.label.slice(0, 22)}</text>
-            <text x="12" y="11" fill="#aaa" fontSize="9" fontFamily="var(--mono)">
-              DK {item.chr}% · UK {item.fnd}%
-            </text>
-          </g>
-        ))}
-        <text x={98} y={H - 4} textAnchor="middle" fill="#777" fontSize="8" fontFamily="var(--mono)">Datos: {cite}</text>
-      </svg>
-    );
-  }
-
-  if (kind === 'timeline') {
-    return (
-      <svg width="100%" height={H} viewBox={`0 0 ${W} ${H}`}>
-        <line x1="20" y1="68" x2={W - 20} y2="68" stroke="#383845" strokeWidth="2" />
-        {s.map((item, i) => {
-          const x = 38 + i * ((W - 76) / Math.max(1, s.length - 1));
-          const hChr = (item.chr / 100) * 42;
-          const hFnd = (item.fnd / 100) * 42;
-          return (
-            <g key={item.label} transform={`translate(${x}, 68)`}>
-              <line x1="-5" y1="0" x2="-5" y2={-hChr} stroke="#e6956a" strokeWidth="4" strokeLinecap="round" />
-              <line x1="5" y1="0" x2="5" y2={hFnd} stroke="#7fbf8e" strokeWidth="4" strokeLinecap="round" />
-              <circle r="4" fill="#ebe5d9" />
-              <text x="0" y={i % 2 === 0 ? -hChr - 6 : hFnd + 12} textAnchor="middle" fill="#ddd" fontSize="8.5" fontFamily="var(--mono)">
-                {item.label.split('·')[0].trim()}
-              </text>
-              <text x="0" y={i % 2 === 0 ? -hChr - 16 : hFnd + 22} textAnchor="middle" fill="#999" fontSize="8" fontFamily="var(--sans)">
-                {(item.label.split('·')[1] || '').trim().slice(0, 16)}
-              </text>
-            </g>
-          );
-        })}
-      </svg>
-    );
-  }
-
-  const maxVal = Math.max(...s.flatMap((x) => [x.chr, x.fnd]), 1);
-  return (
-    <svg width="100%" height={H} viewBox={`0 0 ${W} ${H}`}>
-      {s.slice(0, 4).map((item, i) => {
-        const y = 14 + i * (s.length > 3 ? 30 : 38);
-        const wChr = Math.max(6, (item.chr / maxVal) * 155);
-        const wFnd = Math.max(6, (item.fnd / maxVal) * 155);
-        return (
-          <g key={item.label} transform={`translate(8, ${y})`}>
-            <text x="0" y="0" fill="#e0e0e6" fontSize="9.5" fontFamily="var(--sans)">
-              {item.label}
-            </text>
-            <rect x="0" y="4" width={wChr} height="7" rx="3.5" fill="#e6956a" />
-            <text x={wChr + 6} y="10.5" fill="#e6956a" fontSize="9" fontFamily="var(--mono)">
-              DK: {item.chr}{item.unit ? ' ' + item.unit : ''}
-            </text>
-            <rect x="0" y="13" width={wFnd} height="7" rx="3.5" fill="#7fbf8e" />
-            <text x={wFnd + 6} y="19.5" fill="#7fbf8e" fontSize="9" fontFamily="var(--mono)">
-              UK: {item.fnd}{item.unit ? ' ' + item.unit : ''}
-            </text>
-          </g>
-        );
-      })}
-    </svg>
-  );
 }
 
 function NetRings({ o, on, m }: { o: ReturnType<typeof orbit>; on: boolean; m: boolean }) {
