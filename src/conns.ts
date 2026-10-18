@@ -1,8 +1,5 @@
-import { COLORS, GEO, type GeoId, type ModelId } from './content';
+import { BEATS, COLORS, GEO, MODEL, type GeoId, type ModelId } from './content';
 
-// Una conexión animada entre dos anclas:
-//  c:<modelo>:<t|b|l|r>  borde de una tarjeta     g:<punto>  punto del territorio proyectado en el plano 3D/2D
-//  x:<id>  punto del ciclo                         o:<modelo> nodo orbital de la red propia (secuencia 8)
 export interface Conn {
   id: string;
   a: string;
@@ -25,67 +22,106 @@ const C = COLORS;
 export const CONNS: Conn[] = [];
 const add = (c: Conn) => CONNS.push(c);
 
-// ---- columna vertical de tarjetas (secuencias 1 a 7)
-add({ id: 's-suj-esc', a: 'c:suj:b', b: 'c:esc:t', color: C.cream, arrow: true, min: 1, max: 7, delay: 0.7, models: ['suj', 'esc'] });
-add({ id: 's-esc-prop', a: 'c:esc:b', b: 'c:prop:t', color: C.water, arrow: true, min: 3, max: 7, delay: 0.6, models: ['esc', 'prop'] });
-add({ id: 's-prop-pchr', a: 'c:prop:b', b: 'c:pchr:t', color: C.earth, arrow: true, min: 4, max: 7, delay: 0.6, models: ['prop', 'pchr'] });
-add({ id: 's-pchr-pfnd', a: 'c:pchr:b', b: 'c:pfnd:t', color: C.orange, arrow: true, min: 5, max: 7, delay: 0.6, models: ['pchr', 'pfnd'] });
-add({ id: 's-pfnd-econ', a: 'c:pfnd:b', b: 'c:econ:t', color: C.green, arrow: true, min: 6, max: 7, delay: 0.6, models: ['pfnd', 'econ'] });
-add({ id: 's-econ-meta', a: 'c:econ:b', b: 'c:meta:t', color: C.bio, arrow: true, min: 7, max: 7, delay: 0.6, models: ['econ', 'meta'] });
+// ---- Columna vertical de las 7 dimensiones (secuencias 0 a 38)
+add({ id: 's-suj-esc', a: 'c:suj:b', b: 'c:esc:t', color: C.cream, arrow: true, min: 5, max: 38, delay: 0.4, models: ['suj', 'esc'] });
+add({ id: 's-esc-prop', a: 'c:esc:b', b: 'c:prop:t', color: C.water, arrow: true, min: 10, max: 38, delay: 0.4, models: ['esc', 'prop'] });
+add({ id: 's-prop-pchr', a: 'c:prop:b', b: 'c:pchr:t', color: C.earth, arrow: true, min: 15, max: 38, delay: 0.4, models: ['prop', 'pchr'] });
+add({ id: 's-pchr-pfnd', a: 'c:pchr:b', b: 'c:pfnd:t', color: C.orange, arrow: true, min: 21, max: 38, delay: 0.4, models: ['pchr', 'pfnd'] });
+add({ id: 's-pfnd-econ', a: 'c:pfnd:b', b: 'c:econ:t', color: C.green, arrow: true, min: 27, max: 38, delay: 0.4, models: ['pfnd', 'econ'] });
+add({ id: 's-econ-meta', a: 'c:econ:b', b: 'c:meta:t', color: C.bio, arrow: true, min: 33, max: 38, delay: 0.4, models: ['econ', 'meta'] });
 
-// ---- Beat 2: Escala territorial y demografía en los dos planos 3D (Christiania 34 ha vs Findhorn 14-30 ha)
-add({ id: 'e-batmands', a: 'c:esc:r', b: 'g:batmands', color: C.water, min: 2, max: 2, delay: 0.5, models: ['esc'], title: 'Christiania: ~950 residentes estables y >1.000.000 visitantes/año' });
-add({ id: 'e-stadsgrav', a: 'c:esc:r', b: 'g:stadsgrav', color: C.water, min: 2, max: 2, delay: 0.9, models: ['esc'], title: 'Murallas del siglo XVII y canal Stadsgraven (34 hectáreas)' });
-add({ id: 'e-thepark', a: 'c:esc:r', b: 'g:thepark', color: C.green, min: 2, max: 2, delay: 1.3, models: ['esc'], title: 'Ecoaldea Findhorn: 14 ha en The Park (~30 ha con anexos), ~375 residentes' });
-add({ id: 'e-caravan', a: 'g:thepark', b: 'g:caravan', color: C.green, dashed: true, arrow: true, min: 2, max: 2, delay: 1.7, models: ['esc'], title: 'Expansión desde el parque de caravanas original (1962)' });
+// ---- Conexiones dinámicas por cada uno de los 40 beats (cada 30 segundos cambia el flujo)
+const MODEL_BY_IDX: ModelId[] = ['suj', 'esc', 'prop', 'pchr', 'pfnd', 'econ', 'meta'];
 
-// ---- Beat 3: Estructura jurídica de propiedad y fideicomisos
-add({ id: 'pr-faelles', a: 'c:prop:r', b: 'g:faelles', color: C.earth, min: 3, max: 3, delay: 0.5, models: ['prop'], title: 'Fundación Freetown Christiania (2012): fideicomiso colectivo y acciones comunitarias' });
-add({ id: 'pr-bat', a: 'g:faelles', b: 'g:batmands', color: C.earth, arrow: true, min: 3, max: 3, delay: 1.0, models: ['prop'], title: 'Compra/arrendamiento del suelo militar al Estado danés' });
-add({ id: 'pr-park', a: 'c:prop:r', b: 'g:thepark', color: C.earth, min: 3, max: 3, delay: 0.8, models: ['prop'], title: 'Propiedad distribuida/mixta: Park Ecovillage Trust (PET) + Fundación Findhorn' });
-add({ id: 'pr-eco', a: 'g:thepark', b: 'g:ecohouses', color: C.earth, dashed: true, arrow: true, min: 3, max: 3, delay: 1.4, models: ['prop'], title: 'Propietarios residenciales privados en Field of Dreams' });
+BEATS.forEach((b) => {
+  const i = b.index;
+  if (i === 39) return;
+  const modId = MODEL_BY_IDX[Math.max(0, b.modelIndex)] || 'suj';
+  const modColor = MODEL[modId].color;
 
-// ---- Beat 4: Periodización A · Freetown Christiania (1971–Presente)
-add({ id: 'pc-1', a: 'c:pchr:r', b: 'g:batmands', color: C.orange, min: 4, max: 4, delay: 0.5, models: ['pchr'], label: '1971–1989 Ocupación', title: 'Fase 1 (1971–1989): Ocupación del cuartel de Båtmandsstræde y autogobierno asambleario' });
-add({ id: 'pc-2', a: 'g:batmands', b: 'g:pusher', color: '#ffffff', min: 4, max: 4, delay: 1.1, models: ['pchr'], kind: 'tension', label: '1989–2011 Christianialoven', title: 'Fase 2 (1989–2011): Ley de Christiania, presión inmobiliaria y tensiones en Pusher Street' });
-add({ id: 'pc-3', a: 'g:pusher', b: 'g:faelles', color: C.orange, arrow: true, min: 4, max: 4, delay: 1.7, models: ['pchr'], label: '2012–Hoy Fideicomiso', title: 'Fase 3 (2012–Presente): Fundación Freetown Christiania y acciones comunitarias' });
+  // Anclajes desde la tarjeta activa a los puntos geográficos del plano 3D de ese segmento de 30s
+  b.activeGeos.forEach((g, idx) => {
+    const gSite = GEO[g].site;
+    const isDep = g === 'redcph' || g === 'redscot';
+    const isTension = g === 'pusher' || g === 'sanctuary';
+    add({
+      id: `b${i}-c-${g}`,
+      a: `c:${modId}:r`,
+      b: `g:${g}`,
+      color: isDep ? C.grey : isTension ? '#ffffff' : gSite === 'chr' ? C.orange : C.green,
+      dashed: isDep || idx % 2 === 1,
+      arrow: true,
+      min: i,
+      max: i,
+      delay: 0.3 + idx * 0.35,
+      models: [modId],
+      kind: isTension ? 'tension' : isDep ? 'dep' : undefined,
+      label: idx === 0 ? b.planCode.split('·')[0].trim() : undefined,
+      title: `${b.planTitle} → ${GEO[g].label}: ${GEO[g].sub}`,
+    });
+  });
 
-// ---- Beat 5: Periodización B · Ecoaldea Findhorn (1962–Presente)
-add({ id: 'pf-1', a: 'c:pfnd:r', b: 'g:caravan', color: C.green, min: 5, max: 5, delay: 0.5, models: ['pfnd'], label: '1962–1972 Biocultural', title: 'Fase 1 (1962–1972): Huerto biodinámico en suelo arenoso y parque de caravanas' });
-add({ id: 'pf-2a', a: 'g:caravan', b: 'g:ecohouses', color: C.green, arrow: true, min: 5, max: 5, delay: 1.0, models: ['pfnd'], label: '1972–2019 Ecotecnologías', title: 'Fase 2 (1972–2019): Eco-houses (80s), Wind Park (1989) y Living Machine (1995)' });
-add({ id: 'pf-2b', a: 'g:ecohouses', b: 'g:living', color: C.water, arrow: true, min: 5, max: 5, delay: 1.4, models: ['pfnd'], title: 'Integración metabólica entre viviendas ecológicas y planta Living Machine' });
-add({ id: 'pf-2c', a: 'g:ecohouses', b: 'g:windpark', color: C.green, arrow: true, min: 5, max: 5, delay: 1.6, models: ['pfnd'], title: 'Parque eólico comunitario Findhorn Wind Park (1989)' });
-add({ id: 'pf-3', a: 'g:thepark', b: 'g:sanctuary', color: '#ffffff', min: 5, max: 5, delay: 2.0, models: ['pfnd'], kind: 'tension', label: '2021 Incendio · 2023 Crisis', title: 'Fase 3 (2020–Presente): Incendio de Sanctuary y CC (2021) y reestructuración financiera (2023)' });
+  // Flujo cruzado entre los dos primeros puntos geográficos activos del beat
+  if (b.activeGeos.length >= 2) {
+    const g0 = b.activeGeos[0];
+    const g1 = b.activeGeos[1];
+    add({
+      id: `b${i}-g-${g0}-${g1}`,
+      a: `g:${g0}`,
+      b: `g:${g1}`,
+      color: modColor,
+      dashed: GEO[g0].site !== GEO[g1].site,
+      arrow: true,
+      min: i,
+      max: i,
+      delay: 0.65,
+      models: [modId],
+      label: GEO[g0].site !== GEO[g1].site ? 'Homologación 14–34 ha' : undefined,
+      title: `Relación espacial en ${b.timeRange}: ${GEO[g0].label} ⇄ ${GEO[g1].label}`,
+    });
+  }
+});
 
-// ---- Beat 6: Enfoque 3 · Economía y Conocimiento Adaptativo (Homologación de Mecanismos)
-add({ id: 'ec-chr', a: 'c:econ:r', b: 'g:faelles', color: C.bio, min: 6, max: 6, delay: 0.5, models: ['econ'], label: 'Fælleskasse', title: 'Caja común Fælleskasse y acciones populares en Christiania' });
-add({ id: 'ec-maskin', a: 'g:faelles', b: 'g:maskin', color: C.earth, arrow: true, min: 6, max: 6, delay: 1.0, models: ['econ'], title: 'Financiamiento de mantenimiento urbano y talleres colectivos (Maskinhallen)' });
-add({ id: 'ec-fnd', a: 'c:econ:r', b: 'g:thepark', color: C.bio, min: 6, max: 6, delay: 0.8, models: ['econ'], label: 'PET & Educación', title: 'Impuestos/donaciones comunitarias en Findhorn y centro educativo holístico' });
-add({ id: 'ec-homol', a: 'g:faelles', b: 'g:thepark', color: C.cream, dashed: true, min: 6, max: 6, delay: 1.5, models: ['econ'], label: 'Homologación financiera', title: 'Regla Metodológica: Homologación de fondos comunitarios (Fælleskasse vs. aportes PET/Findhorn)' });
-add({ id: 'ec-cyc', a: 'x:fondo', b: 'g:faelles', color: C.orange, dashed: true, min: 6, max: 6, delay: 1.8, models: ['econ'], title: 'Articulación del fondo comunitario en el ciclo adaptativo' });
+// ---- Beat 39 (19:30–20:00): Red Síntesis Orbital de Cierre
+add({ id: 'n-suj-esc', a: 'o:suj', b: 'o:esc', color: C.cream, arrow: true, min: 39, max: 39, delay: 0.4, models: ['suj', 'esc'], title: 'Delimitación de escala intermedia (14–34 ha) y demografía' });
+add({ id: 'n-esc-prop', a: 'o:esc', b: 'o:prop', color: C.water, arrow: true, min: 39, max: 39, delay: 0.6, models: ['esc', 'prop'] });
+add({ id: 'n-prop-pchr', a: 'o:prop', b: 'o:pchr', color: C.earth, arrow: true, min: 39, max: 39, delay: 0.8, models: ['prop', 'pchr'] });
+add({ id: 'n-prop-pfnd', a: 'o:prop', b: 'o:pfnd', color: C.green, arrow: true, min: 39, max: 39, delay: 1.0, models: ['prop', 'pfnd'] });
+add({ id: 'n-pchr-econ', a: 'o:pchr', b: 'o:econ', color: C.orange, arrow: true, min: 39, max: 39, delay: 1.2, models: ['pchr', 'econ'], label: 'Enfoque 3 + Enfoque 5' });
+add({ id: 'n-pfnd-meta', a: 'o:pfnd', b: 'o:meta', color: C.green, arrow: true, min: 39, max: 39, delay: 1.4, models: ['pfnd', 'meta'] });
+add({ id: 'n-econ-meta', a: 'o:econ', b: 'o:meta', color: C.bio, dashed: true, arrow: true, min: 39, max: 39, delay: 1.6, models: ['econ', 'meta'], title: 'Homologación entre fondos comunitarios e infraestructuras metabólicas' });
 
-// ---- Beat 7: Enfoque 5 · Infraestructuras, Metabolismo y Reconocimiento de Dependencias
-add({ id: 'mt-chr1', a: 'c:meta:r', b: 'g:maskin', color: C.orange, min: 7, max: 7, delay: 0.5, models: ['meta'], title: 'Christiania: Reutilización de materiales y autoconstrucción adaptativa' });
-add({ id: 'mt-chr2', a: 'g:maskin', b: 'g:stadsgrav', color: C.water, arrow: true, min: 7, max: 7, delay: 0.9, models: ['meta'], label: 'Drenaje pluvial', title: 'Drenaje pluvial hacia los canales históricos de Stadsgraven' });
-add({ id: 'mt-dep-chr', a: 'g:batmands', b: 'g:redcph', color: C.grey, dashed: true, min: 7, max: 7, delay: 1.4, models: ['meta'], kind: 'dep', label: 'Dep. Red Copenhague', title: 'Reconocimiento de Dependencia: Red sanitaria y eléctrica municipal de Copenhague' });
-
-add({ id: 'mt-fnd1', a: 'c:meta:r', b: 'g:living', color: C.water, min: 7, max: 7, delay: 0.7, models: ['meta'], label: 'Living Machine', title: 'Findhorn: Depuración biológica anaerobia/aerobia en Living Machine (1995)' });
-add({ id: 'mt-fnd2', a: 'g:windpark', b: 'g:ecohouses', color: C.green, arrow: true, min: 7, max: 7, delay: 1.1, models: ['meta'], label: '675 kW Eólica', title: 'Abastecimiento eléctrico desde los aerogeneradores comunitarios hacia Eco-houses' });
-add({ id: 'mt-dep-fnd', a: 'g:windpark', b: 'g:redscot', color: C.grey, dashed: true, min: 7, max: 7, delay: 1.6, models: ['meta'], kind: 'dep', label: 'Dep. Red Escocesa', title: 'Reconocimiento de Dependencia: Red eléctrica nacional escocesa como respaldo de fondo' });
-
-// ---- Beat 8: Red Síntesis de Homologación Comparativa
-add({ id: 'n-suj-esc', a: 'o:suj', b: 'o:esc', color: C.cream, arrow: true, min: 8, max: 8, delay: 0.6, models: ['suj', 'esc'], title: 'La delimitación de escala intermedia (14–34 ha) habilita la comparación demográfica' });
-add({ id: 'n-esc-prop', a: 'o:esc', b: 'o:prop', color: C.water, arrow: true, min: 8, max: 8, delay: 0.9, models: ['esc', 'prop'] });
-add({ id: 'n-prop-pchr', a: 'o:prop', b: 'o:pchr', color: C.earth, arrow: true, min: 8, max: 8, delay: 1.1, models: ['prop', 'pchr'] });
-add({ id: 'n-prop-pfnd', a: 'o:prop', b: 'o:pfnd', color: C.green, arrow: true, min: 8, max: 8, delay: 1.3, models: ['prop', 'pfnd'] });
-add({ id: 'n-pchr-econ', a: 'o:pchr', b: 'o:econ', color: C.orange, arrow: true, min: 8, max: 8, delay: 1.5, models: ['pchr', 'econ'], label: 'Enfoque 3 + Enfoque 5' });
-add({ id: 'n-pfnd-meta', a: 'o:pfnd', b: 'o:meta', color: C.green, arrow: true, min: 8, max: 8, delay: 1.7, models: ['pfnd', 'meta'] });
-add({ id: 'n-econ-meta', a: 'o:econ', b: 'o:meta', color: C.bio, dashed: true, arrow: true, min: 8, max: 8, delay: 1.9, models: ['econ', 'meta'], title: 'Articulación entre fondos comunitarios e infraestructuras metabólicas' });
-
-for (const o of CONNS.slice()) {
-  if (o.max === 8 || !(o.a.startsWith('g:') || o.b.startsWith('g:')) || o.a.startsWith('x:')) continue;
-  add({ ...o, id: o.id + '-n', a: o.a.startsWith('c:') ? 'o:' + o.a.split(':')[1] : o.a, min: 8, max: 8, exp: true });
-}
+// Enlaces de exploración en el Beat 39 hacia los anclajes 3D
+([
+  ['suj', 'batmands'],
+  ['suj', 'thepark'],
+  ['esc', 'pusher'],
+  ['esc', 'whins'],
+  ['prop', 'faelles'],
+  ['prop', 'ecohouses'],
+  ['pchr', 'stadsgrav'],
+  ['pfnd', 'caravan'],
+  ['pfnd', 'sanctuary'],
+  ['econ', 'maskin'],
+  ['meta', 'living'],
+  ['meta', 'windpark'],
+  ['meta', 'redcph'],
+  ['meta', 'redscot'],
+] as [ModelId, GeoId][]).forEach(([mId, gId], k) => {
+  add({
+    id: `exp-${mId}-${gId}`,
+    a: `o:${mId}`,
+    b: `g:${gId}`,
+    color: MODEL[mId].color,
+    dashed: gId === 'redcph' || gId === 'redscot',
+    arrow: true,
+    min: 39,
+    max: 39,
+    delay: 0.3 + k * 0.1,
+    models: [mId],
+    exp: true,
+  });
+});
 
 export const REL_TEXT: Record<ModelId, { rel: [ModelId, string][]; geo: GeoId[] }> = {
   suj: {
@@ -102,7 +138,7 @@ export const REL_TEXT: Record<ModelId, { rel: [ModelId, string][]; geo: GeoId[] 
       ['suj', 'contrasta densidad capitalina vs. rural costera'],
       ['prop', 'presión de >1M turistas vs. 4k–10k estudiantes'],
     ],
-    geo: ['batmands', 'stadsgrav', 'thepark', 'caravan'],
+    geo: ['batmands', 'pusher', 'thepark', 'whins'],
   },
   prop: {
     rel: [
@@ -118,7 +154,7 @@ export const REL_TEXT: Record<ModelId, { rel: [ModelId, string][]; geo: GeoId[] 
       ['econ', 'autogobierno asambleario y Fælleskasse'],
       ['meta', 'reciclaje urbano en Maskinhallen y Stadsgraven'],
     ],
-    geo: ['batmands', 'pusher', 'faelles', 'maskin'],
+    geo: ['batmands', 'pusher', 'faelles', 'maskin', 'dysse'],
   },
   pfnd: {
     rel: [
@@ -130,15 +166,15 @@ export const REL_TEXT: Record<ModelId, { rel: [ModelId, string][]; geo: GeoId[] 
   },
   econ: {
     rel: [
-      ['prop', 'acciones comunitarias vs. fideicomiso PET'],
+      ['prop', 'acciones comunitarias Folkeaktier vs. fideicomiso PET'],
       ['meta', 'financia el mantenimiento metabólico e infraestructural'],
     ],
-    geo: ['faelles', 'maskin', 'thepark', 'sanctuary'],
+    geo: ['faelles', 'maskin', 'thepark', 'ecohouses'],
   },
   meta: {
     rel: [
       ['econ', 'sostenido por mecanismos económicos comunitarios'],
-      ['suj', 'reconoce dependencias de redes públicas externas'],
+      ['suj', 'reconoce dependencias de redes públicas externas (HOFOR / Scottish Grid)'],
     ],
     geo: ['maskin', 'stadsgrav', 'redcph', 'living', 'windpark', 'redscot'],
   },

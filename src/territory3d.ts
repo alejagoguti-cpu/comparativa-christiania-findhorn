@@ -614,15 +614,15 @@ export class DualTerritory3D {
     this.lastState = [beat, sel];
     (['chr', 'fnd'] as SiteKey[]).forEach((site) => {
       const r = this.rigs[site];
-      const showWater = beat >= 2;
-      const showPerim = beat === 2 || beat === 3 || beat === 8 || (beat === 4 && site === 'chr') || (beat === 5 && site === 'fnd');
-      const showVias = beat >= 3;
+      const showWater = beat >= 0;
+      const showPerim = beat % 3 === 0 || beat <= 5 || beat === 39 || sel !== null;
+      const showVias = beat >= 4;
 
-      this.fade(r.fills.water, showWater ? 0.34 : 0, 0.2);
-      this.fade(r.lines.waterLine, showWater ? 0.9 : 0, 0.3);
-      this.fade(r.lines.perim, showPerim ? 0.95 : 0.25, 0.2);
-      this.fade(r.lines.viasMain, showVias ? 0.75 : 0.2, 0.3);
-      this.fade(r.lines.viasLocal, beat >= 5 ? 0.65 : 0.2, 0.4);
+      this.fade(r.fills.water, showWater ? (beat % 2 === 0 ? 0.38 : 0.24) : 0, 0.15);
+      this.fade(r.lines.waterLine, showWater ? 0.92 : 0.35, 0.2);
+      this.fade(r.lines.perim, showPerim ? 0.96 : 0.38, 0.15);
+      this.fade(r.lines.viasMain, showVias ? 0.8 : 0.3, 0.2);
+      this.fade(r.lines.viasLocal, beat >= 6 ? 0.68 : 0.25, 0.25);
     });
   }
 }
