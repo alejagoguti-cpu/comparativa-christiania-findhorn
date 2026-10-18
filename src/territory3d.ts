@@ -144,8 +144,9 @@ export class DualTerritory3D {
         this.rigs.chr.viewport = { x: 0, y: halfH, w: W, h: H - halfH };
         this.rigs.fnd.viewport = { x: 0, y: 0, w: W, h: halfH };
       } else {
-        const leftOffset = Math.min(Math.max(this.pad.left * 0.72, 260), W * 0.38);
-        const availW = W - leftOffset;
+        const leftOffset = Math.min(Math.max(this.pad.left, 0), W * 0.30);
+        const rightOffset = Math.min(Math.max(this.pad.right, 0), W * 0.34);
+        const availW = Math.max(280, W - leftOffset - rightOffset);
         const halfW = Math.floor(availW / 2);
         this.rigs.chr.viewport = { x: Math.floor(leftOffset), y: 0, w: halfW, h: H };
         this.rigs.fnd.viewport = { x: Math.floor(leftOffset) + halfW, y: 0, w: availW - halfW, h: H };

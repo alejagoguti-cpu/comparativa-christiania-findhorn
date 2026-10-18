@@ -162,32 +162,32 @@ interface St {
   orb?: boolean;
 }
 
-function layout(b: number, W: number, H: number, m: boolean): Record<string, St> {
+function layout(b: number, W: number, H: number, m: boolean, hidePanels = false): Record<string, St> {
   const L: Record<string, St> = {};
-  const cw = m ? Math.min(W * 0.9, 360) : 320;
-  const sx = m ? W * 0.5 : 185;
+  const cw = m ? Math.min(W * 0.9, 340) : 280;
+  const sx = m ? W * 0.5 : 154;
   const act = ACTIVE_BY_BEAT[b];
-  const target = H * (m ? 0.28 : 0.43);
+  const target = H * (m ? 0.28 : 0.46);
 
   SPINE.forEach((id, i) => {
     const mod = MODEL[id];
-    const vis = b >= mod.appear;
+    const vis = b >= mod.appear && !hidePanels;
     if (b === N - 1) {
       const p = orbit(W, H, m).pos[id];
-      L[id] = { x: p.x, y: p.y + (m ? 14 : 20), o: 1, s: 1, w: m ? 96 : 132, compact: true, orb: true, d: 0.1 + i * 0.06 };
+      L[id] = { x: p.x, y: p.y + (m ? 14 : 20), o: hidePanels ? 0 : 1, s: 1, w: m ? 96 : 128, compact: true, orb: true, d: 0.1 + i * 0.06 };
     } else {
-      const ya = Math.max(150, target);
-      const y = i === act ? ya : i < act ? ya - 122 - (act - i - 1) * 62 : ya + 135;
-      const o = !vis ? 0 : i === act ? 1 : Math.max(0.26, 0.68 - (act - i) * 0.12);
-      const fade = y < (m ? 86 : 104) ? 0 : o;
+      const ya = Math.max(146, target);
+      const y = i === act ? ya : i < act ? ya - 114 - (act - i - 1) * 54 : ya + 126;
+      const o = !vis ? 0 : i === act ? 1 : Math.max(0.22, 0.58 - (act - i) * 0.14);
+      const fade = y < (m ? 82 : 96) ? 0 : o;
       L[id] = {
         x: sx,
-        y: vis ? y : y + 20,
+        y: vis ? y : y + 18,
         o: fade,
         s: vis ? 1 : 0.94,
-        w: i === act ? cw : cw * 0.85,
+        w: i === act ? cw : cw * 0.88,
         compact: i !== act,
-        d: i === act ? 0.2 : 0,
+        d: i === act ? 0.18 : 0,
       };
     }
   });
@@ -200,6 +200,7 @@ function cameraForBeat(
   H: number,
   m: boolean,
   overrideFocus: ViewFocus | null = null,
+  hidePanels = false,
 ): {
   focus: ViewFocus;
   chrBox: [number, number, number, number];
@@ -210,11 +211,11 @@ function cameraForBeat(
   el: number;
 } {
   const spec = BEATS[b] || BEATS[0];
-  const rightHudW = m ? 12 : Math.min(410, W * 0.35);
-  const leftColW = m ? 12 : 355;
+  const rightHudW = m ? 12 : hidePanels ? 24 : Math.min(372, W * 0.31);
+  const leftColW = m ? 12 : hidePanels ? 24 : 306;
   const pad: Pad = m
-    ? { top: H * 0.38, right: 12, bottom: H * 0.38, left: 12 }
-    : { top: 82, right: rightHudW, bottom: 78, left: leftColW };
+    ? { top: H * 0.36, right: 12, bottom: H * 0.36, left: 12 }
+    : { top: 68, right: rightHudW, bottom: 64, left: leftColW };
 
   return {
     focus: overrideFocus || spec.focus,
@@ -242,8 +243,12 @@ export default function App() {
   const [secInBeat, setSecInBeat] = useState(0);
   const [sel, setSel] = useState<ModelId | null>(null);
   const [showMatrix, setShowMatrix] = useState(false);
+  // Modo Presentación activo por defecto: oculta controles de edición y bordes punteados
+  const [presMode, setPresMode] = useState(true);
   const [editMode, setEditMode] = useState(false);
   const [showDrawer, setShowDrawer] = useState(false);
+  const [hidePanels, setHidePanels] = useState(false);
+  const [hudTab, setHudTab] = useState<'mix' | 'chart' | 'evidence'>('mix');
   const [overrides, setOverrides] = useState<CustomOverrides>(() => loadOverrides());
   const [zoomPhoto, setZoomPhoto] = useState<RealPhoto | null>(null);
   const [focusOverride, setFocusOverride] = useState<ViewFocus | null>(null);
@@ -516,7 +521,10 @@ export default function App() {
     if (k3.current) k3.current.state(beat, sel);
   }, [beat, sel]);
 
-  const camState = useMemo(() => cameraForBeat(beat, W, H, m, focusOverride), [beat, W, H, m, focusOverride]);
+  const camState = useMemo(
+    () => cameraForBeat(beat, W, H, m, focusOverride, hidePanels),
+    [beat, W, H, m, focusOverride, hidePanels],
+  );
 
   useEffect(() => {
     const c = camState;
@@ -529,15 +537,15 @@ export default function App() {
 
   useLayoutEffect(() => {
     gsap.to(mapWrapRef.current, { opacity: !view3d ? 1 : 0, duration: reduced() ? 0 : 0.9, ease: 'power2.out' });
-    gsap.to(k3El.current, { opacity: view3d ? (beat === N - 1 ? 0.82 : 1) : 0, duration: reduced() ? 0 : 0.9, ease: 'power2.out' });
-    gsap.to('#wash', { opacity: beat < N - 1 ? 1 : 0.6, duration: 0.8 });
-  }, [beat, view3d]);
+    gsap.to(k3El.current, { opacity: view3d ? (beat === N - 1 ? 0.85 : 1) : 0, duration: reduced() ? 0 : 0.9, ease: 'power2.out' });
+    gsap.to('#wash', { opacity: hidePanels ? 0.2 : beat < N - 1 ? 0.85 : 0.5, duration: 0.8 });
+  }, [beat, view3d, hidePanels]);
 
   useLayoutEffect(() => {
     gsap.set(Object.values(cards.current).filter(Boolean), { xPercent: -50, yPercent: -50 });
   }, []);
 
-  const lay = useMemo(() => layout(beat, W, H, m), [beat, W, H, m]);
+  const lay = useMemo(() => layout(beat, W, H, m, hidePanels), [beat, W, H, m, hidePanels]);
 
   useLayoutEffect(() => {
     const first = !inited.current;
@@ -764,17 +772,25 @@ export default function App() {
   const totalElapsedSec = beat * 30 + secInBeat;
   const fmtMMSS = (s: number) => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
 
+  const canEdit = !presMode && editMode;
+  const splitMidX = !m
+    ? Math.floor(
+        Math.min(camState.pad.left, W * 0.30) +
+          Math.max(280, W - Math.min(camState.pad.left, W * 0.30) - Math.min(camState.pad.right, W * 0.34)) / 2,
+      )
+    : Math.floor(W / 2);
+
   return (
     <>
       <div ref={spacerRef} style={{ height: N * 100 + 'vh' }} aria-hidden />
-      <div id="stage" ref={stageRef} className={editMode ? 'edit-active' : ''} onClick={() => setSel(null)}>
+      <div id="stage" ref={stageRef} className={canEdit ? 'edit-active' : ''} onClick={() => setSel(null)}>
         <div
           id="map-wrap"
           ref={mapWrapRef}
           style={{
             opacity: 0,
-            paddingLeft: !m && camState.focus === 'dual' ? 340 : 0,
-            paddingRight: !m ? 395 : 0,
+            paddingLeft: !m && !hidePanels && camState.focus === 'dual' ? 306 : 0,
+            paddingRight: !m && !hidePanels ? 372 : 0,
             flexDirection: m ? 'column' : 'row',
           }}
         >
@@ -784,63 +800,61 @@ export default function App() {
         <div id="k3d" ref={k3El} style={{ opacity: 1 }} />
         <div id="wash" style={{ opacity: 1 }} />
 
-        {/* Banner superior del Plano 3D activo (editable directamente cuando EditMode está activo) */}
-        <div id="plan-banner" style={{ pointerEvents: editMode ? 'auto' : 'none' }}>
-          <div
-            className="p-code"
-            contentEditable={editMode}
-            suppressContentEditableWarning
-            onBlur={(e) => updateBeat(beat, { planCode: e.currentTarget.textContent || '' })}
-          >
-            {curBeat.planCode}
-          </div>
-          <div
-            className="p-title"
-            contentEditable={editMode}
-            suppressContentEditableWarning
-            onBlur={(e) => updateBeat(beat, { planTitle: e.currentTarget.textContent || '' })}
-          >
-            {curBeat.planTitle}
-          </div>
-        </div>
+        {/* Línea divisoria sutil cuando ambos territorios 3D están en paralelo */}
+        {!m && camState.focus === 'dual' && (
+          <div className="vp-divider" style={{ left: splitMidX }} />
+        )}
 
-        {/* Insignias para conmutar enfoque 3D entre ambos casos */}
-        <div
-          className="vp-badge"
-          style={{ left: m ? 12 : 352, top: m ? 62 : 124 }}
-          onClick={(e) => {
-            e.stopPropagation();
-            setFocusOverride(focusOverride === 'chr' ? null : 'chr');
-          }}
-          title="Enfocar cámara 3D en Freetown Christiania"
-        >
-          <i style={{ background: COLORS.orange }} />
-          <span>🇩🇰 Christiania 3D</span>
-          <span className="sub">34 ha</span>
-        </div>
-        <div
-          className="vp-badge"
-          style={{ left: m ? 185 : 535, top: m ? 62 : 124 }}
-          onClick={(e) => {
-            e.stopPropagation();
-            setFocusOverride(focusOverride === 'fnd' ? null : 'fnd');
-          }}
-          title="Enfocar cámara 3D en Ecoaldea Findhorn"
-        >
-          <i style={{ background: COLORS.green }} />
-          <span>🏴󠁧󠁢󠁳󠁣󠁴󠁿 Findhorn 3D</span>
-          <span className="sub">14–30 ha</span>
-        </div>
-
-        <div ref={(e) => { lanes.current.eco = e; }} className={'lane eco' + (beat <= 9 ? ' on' : '')} style={{ ['--c' as string]: COLORS.cream }}>
-          <span className="chip"><Compass />Unidad de Análisis Equivalente (14 a 34 ha)</span>
+        {/* Píldora central unificada del escenario 3D: Plano activo + Selector de cámara 3D */}
+        <div id="stage-pill" style={{ left: !m ? splitMidX : '50%' }} onClick={(e) => e.stopPropagation()}>
+          <div className="sp-plan">
+            <span
+              className="sp-code"
+              contentEditable={canEdit}
+              suppressContentEditableWarning
+              onBlur={(e) => updateBeat(beat, { planCode: e.currentTarget.textContent || '' })}
+            >
+              {curBeat.planCode}
+            </span>
+            <span
+              className="sp-title"
+              contentEditable={canEdit}
+              suppressContentEditableWarning
+              onBlur={(e) => updateBeat(beat, { planTitle: e.currentTarget.textContent || '' })}
+            >
+              {curBeat.planTitle}
+            </span>
+          </div>
+          <div className="sp-cams">
+            <button
+              className={'sp-cam-btn' + (camState.focus === 'dual' ? ' on' : '')}
+              onClick={() => setFocusOverride('dual')}
+              title="Vista comparativa simultánea de ambos territorios 3D"
+            >
+              Paralelo 3D
+            </button>
+            <button
+              className={'sp-cam-btn chr' + (camState.focus === 'chr' ? ' on' : '')}
+              onClick={() => setFocusOverride(focusOverride === 'chr' ? null : 'chr')}
+              title="Enfocar Freetown Christiania (34 ha)"
+            >
+              <i />🇩🇰 Christiania
+            </button>
+            <button
+              className={'sp-cam-btn fnd' + (camState.focus === 'fnd' ? ' on' : '')}
+              onClick={() => setFocusOverride(focusOverride === 'fnd' ? null : 'fnd')}
+              title="Enfocar Ecoaldea Findhorn (14–30 ha)"
+            >
+              <i />🏴󠁧󠁢󠁳󠁣󠁴󠁿 Findhorn
+            </button>
+          </div>
         </div>
 
         {/* Capa SVG de flujos dinámicos, anillos orbitales y anclajes 3D */}
         <svg id="links" ref={svgRef} width={W} height={H}>
-          <NetRings o={orb} on={beat === N - 1} m={m} />
+          <NetRings o={orb} on={beat === N - 1 && !hidePanels} m={m} />
           {CONNS.map((c) => {
-            const on = conns.includes(c) && related(c);
+            const on = !hidePanels && conns.includes(c) && related(c);
             return (
               <g
                 key={c.id}
@@ -862,7 +876,7 @@ export default function App() {
             <text
               key={'t' + c.id}
               data-el={c.id}
-              className={'el' + (conns.includes(c) && related(c) ? ' on' : '')}
+              className={'el' + (!hidePanels && conns.includes(c) && related(c) ? ' on' : '')}
               textAnchor="middle"
               style={{ ['--c' as string]: c.color, ['--dl' as string]: (c.delay || 0) + 0.3 + 's' }}
             >
@@ -873,7 +887,7 @@ export default function App() {
             <g
               key={'gl' + c.id}
               data-gl={c.id}
-              className={'gl2' + (conns.includes(c) && related(c) ? ' on' : '') + (c.kind === 'tension' ? ' ten' : ' dep')}
+              className={'gl2' + (!hidePanels && conns.includes(c) && related(c) ? ' on' : '') + (c.kind === 'tension' ? ' ten' : ' dep')}
               style={{ ['--dl' as string]: (c.delay || 0) + 0.35 + 's' }}
             >
               <title>{c.title}</title>
@@ -899,22 +913,21 @@ export default function App() {
           ))}
         </svg>
 
-        {/* Columna izquierda: 7 Dimensiones Estructurales (Editables en vivo con clic cuando EditMode está activo) */}
+        {/* Columna izquierda: 7 Dimensiones Estructurales en cristal oscuro arquitectónico */}
         {mergedModels.map((mod) => (
           <div
             key={mod.id}
             ref={(e) => { cards.current[mod.id] = e; }}
             data-id={mod.id}
             className={'abs node d1 on mm-' + mod.id + (sel === mod.id ? ' sel' : '') + (shape.current[mod.id] || '')}
-            style={{ ['--c' as string]: mod.color, ['--ink' as string]: mod.ink, opacity: 0, cursor: editMode ? 'text' : 'pointer' }}
+            style={{ ['--c' as string]: mod.color, ['--ink' as string]: mod.ink, opacity: 0, cursor: canEdit ? 'text' : 'pointer' }}
             onClick={(e) => onCard(e, mod.id)}
           >
-            <div className="wm">{ICONS[mod.id]}</div>
             <div className="tile">{ICONS[mod.id]}</div>
             <div className="txt">
               <div
                 className="id"
-                contentEditable={editMode}
+                contentEditable={canEdit}
                 suppressContentEditableWarning
                 onBlur={(e) => updateModel(mod.id, { role: e.currentTarget.textContent || '' })}
               >
@@ -922,7 +935,7 @@ export default function App() {
               </div>
               <div
                 className="lb"
-                contentEditable={editMode}
+                contentEditable={canEdit}
                 suppressContentEditableWarning
                 onBlur={(e) => updateModel(mod.id, { title: e.currentTarget.textContent || '' })}
               >
@@ -931,7 +944,7 @@ export default function App() {
               <div className="lbs">{mod.short}</div>
               <p
                 className="dsc"
-                contentEditable={editMode}
+                contentEditable={canEdit}
                 suppressContentEditableWarning
                 onBlur={(e) => updateModel(mod.id, { text: e.currentTarget.textContent || '' })}
               >
@@ -939,171 +952,218 @@ export default function App() {
               </p>
               <div className="dual-badges">
                 <span
-                  className="tag"
-                  contentEditable={editMode}
+                  className="tag chr"
+                  contentEditable={canEdit}
                   suppressContentEditableWarning
                   onBlur={(e) => updateModel(mod.id, { chrBadge: (e.currentTarget.textContent || '').replace(/^🇩🇰\s*/, '') })}
                 >
                   🇩🇰 {mod.chrBadge}
                 </span>
                 <span
-                  className="tag"
-                  contentEditable={editMode}
+                  className="tag fnd"
+                  contentEditable={canEdit}
                   suppressContentEditableWarning
                   onBlur={(e) => updateModel(mod.id, { fndBadge: (e.currentTarget.textContent || '').replace(/^🏴󠁧󠁢󠁳󠁣󠁴󠁿\s*/, '') })}
                 >
                   🏴󠁧󠁢󠁳󠁣󠁴󠁿 {mod.fndBadge}
                 </span>
               </div>
-              {mod.tags && (
-                <div className="chain">
-                  {mod.tags.map((t, i) => (
-                    <span key={t} style={{ animationDelay: i * 0.8 + 's' }}>{t}</span>
-                  ))}
-                </div>
-              )}
             </div>
           </div>
         ))}
 
-        {/* HUD Derecho: Gráfica Dinámica 30s + Fotografía Real + Paper Académico con Cita (Todo editable en vivo) */}
-        <div id="hud-right" onClick={(e) => e.stopPropagation()}>
-          {/* 1. Tarjeta de Gráfica / Diagrama Cuantitativo del Segmento de 30s */}
-          <div className="hud-card">
-            <div className="hud-head">
-              <span className="hud-kicker">
-                <BarChart3 /> DIAGRAMA CUANTITATIVO ({beat + 1}/{N})
-              </span>
-              <span className="hud-time-pill">{curBeat.timeRange}</span>
-            </div>
-            <div
-              className="hud-title"
-              contentEditable={editMode}
-              suppressContentEditableWarning
-              onBlur={(e) => updateBeat(beat, { chartTitle: e.currentTarget.textContent || '' })}
-            >
-              {curBeat.chartTitle}
-            </div>
-            <div
-              className="hud-sub"
-              contentEditable={editMode}
-              suppressContentEditableWarning
-              onBlur={(e) => updateBeat(beat, { chartSub: e.currentTarget.textContent || '' })}
-            >
-              {curBeat.chartSub}
-            </div>
-
-            <div className="kpi-row">
-              <div className="kpi-box chr">
-                <small>🇩🇰 Freetown Christiania</small>
-                <span
-                  contentEditable={editMode}
-                  suppressContentEditableWarning
-                  onBlur={(e) => updateBeat(beat, { kpiChr: e.currentTarget.textContent || '' })}
-                >
-                  {curBeat.kpiChr}
-                </span>
+        {/* Dock Derecho Unificado: Diagrama Interactivo + Fotografía Real + Paper citado */}
+        {!hidePanels && (
+          <div id="hud-right" onClick={(e) => e.stopPropagation()}>
+            <div className="hud-card">
+              {/* Cabecera con pestañas de vista limpia */}
+              <div className="hud-head">
+                <div className="hud-tabs">
+                  <button
+                    className={'hud-tab' + (hudTab === 'mix' ? ' on' : '')}
+                    onClick={() => setHudTab('mix')}
+                    title="Ver Diagrama Interactivo y resumen de Foto/Paper simultáneamente"
+                  >
+                    <Scale size={11} /> Mixto
+                  </button>
+                  <button
+                    className={'hud-tab' + (hudTab === 'chart' ? ' on' : '')}
+                    onClick={() => setHudTab('chart')}
+                    title="Enfocar en el Diagrama Interactivo"
+                  >
+                    <BarChart3 size={11} /> Diagrama ({beat + 1}/{N})
+                  </button>
+                  <button
+                    className={'hud-tab' + (hudTab === 'evidence' ? ' on' : '')}
+                    onClick={() => setHudTab('evidence')}
+                    title="Ver Fotografía Real y Cita APA completa"
+                  >
+                    <Camera size={11} /> Foto &amp; Paper
+                  </button>
+                </div>
+                <span className="hud-time-pill">{curBeat.timeRange}</span>
               </div>
-              <div className="kpi-box fnd">
-                <small>🏴󠁧󠁢󠁳󠁣󠁴󠁿 Ecoaldea Findhorn</small>
-                <span
-                  contentEditable={editMode}
-                  suppressContentEditableWarning
-                  onBlur={(e) => updateBeat(beat, { kpiFnd: e.currentTarget.textContent || '' })}
-                >
-                  {curBeat.kpiFnd}
-                </span>
-              </div>
-            </div>
 
-            <PremiumChart
-              spec={curBeat}
-              cite={curEvidence.paper.shortCite}
-              onChangeKind={(k) => updateBeat(beat, { chartKind: k })}
-            />
+              {/* Sección 1: Diagrama Cuantitativo Interactivo */}
+              {hudTab !== 'evidence' && (
+                <>
+                  <div className="hud-title-block">
+                    <div
+                      className="hud-title"
+                      contentEditable={canEdit}
+                      suppressContentEditableWarning
+                      onBlur={(e) => updateBeat(beat, { chartTitle: e.currentTarget.textContent || '' })}
+                    >
+                      {curBeat.chartTitle}
+                    </div>
+                    <div
+                      className="hud-sub"
+                      contentEditable={canEdit}
+                      suppressContentEditableWarning
+                      onBlur={(e) => updateBeat(beat, { chartSub: e.currentTarget.textContent || '' })}
+                    >
+                      {curBeat.chartSub}
+                    </div>
+                  </div>
 
-            <div
-              className="chart-note"
-              contentEditable={editMode}
-              suppressContentEditableWarning
-              onBlur={(e) => updateBeat(beat, { note: e.currentTarget.textContent || '' })}
-            >
-              {curBeat.note}
+                  <div className="kpi-row">
+                    <div className="kpi-box chr">
+                      <small>🇩🇰 Freetown Christiania</small>
+                      <span
+                        contentEditable={canEdit}
+                        suppressContentEditableWarning
+                        onBlur={(e) => updateBeat(beat, { kpiChr: e.currentTarget.textContent || '' })}
+                      >
+                        {curBeat.kpiChr}
+                      </span>
+                    </div>
+                    <div className="kpi-box fnd">
+                      <small>🏴󠁧󠁢󠁳󠁣󠁴󠁿 Ecoaldea Findhorn</small>
+                      <span
+                        contentEditable={canEdit}
+                        suppressContentEditableWarning
+                        onBlur={(e) => updateBeat(beat, { kpiFnd: e.currentTarget.textContent || '' })}
+                      >
+                        {curBeat.kpiFnd}
+                      </span>
+                    </div>
+                  </div>
+
+                  <PremiumChart
+                    spec={curBeat}
+                    cite={curEvidence.paper.shortCite}
+                    onChangeKind={(k) => updateBeat(beat, { chartKind: k })}
+                  />
+
+                  {hudTab === 'chart' && (
+                    <div
+                      className="chart-note"
+                      contentEditable={canEdit}
+                      suppressContentEditableWarning
+                      onBlur={(e) => updateBeat(beat, { note: e.currentTarget.textContent || '' })}
+                    >
+                      {curBeat.note}
+                    </div>
+                  )}
+                </>
+              )}
+
+              {/* Sección 2A: Vista Mixta Compacta (Foto real + Paper con cita APA sin desbordar pantalla) */}
+              {hudTab === 'mix' && (
+                <div className="ev-compact">
+                  <div
+                    className="ev-thumb"
+                    onClick={() => setZoomPhoto(curEvidence.photo)}
+                    title="Clic para ampliar fotografía real verificada"
+                  >
+                    <img src={curEvidence.photo.url} alt={curEvidence.photo.caption} loading="eager" />
+                    <span>🔍 Foto real</span>
+                  </div>
+                  <div className="ev-body">
+                    <div
+                      className="ev-cap"
+                      contentEditable={canEdit}
+                      suppressContentEditableWarning
+                      onBlur={(e) => updateEvidence(beat, 'photo', { caption: e.currentTarget.textContent || '' })}
+                    >
+                      {curEvidence.photo.caption}
+                    </div>
+                    <div className="ev-paper-row">
+                      <a
+                        className="paper-link"
+                        href={curEvidence.paper.doiOrUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        title={curEvidence.paper.citation}
+                      >
+                        <BookOpen size={10} /> {curEvidence.paper.shortCite} ↗
+                      </a>
+                      <button className="ev-more-btn" onClick={() => setHudTab('evidence')}>
+                        Cita APA completa
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Sección 2B: Vista Expandida de Fotografía Real y Paper Académico con Cita APA 7 */}
+              {hudTab === 'evidence' && (
+                <div className="ev-expanded">
+                  <div
+                    className="photo-frame-lg"
+                    onClick={() => setZoomPhoto(curEvidence.photo)}
+                    title="Haz clic para pantalla completa"
+                  >
+                    <img src={curEvidence.photo.url} alt={curEvidence.photo.caption} loading="eager" />
+                    <div className="photo-tag">{curEvidence.photo.year} · {curEvidence.photo.location}</div>
+                  </div>
+                  <div
+                    className="photo-cap"
+                    contentEditable={canEdit}
+                    suppressContentEditableWarning
+                    onBlur={(e) => updateEvidence(beat, 'photo', { caption: e.currentTarget.textContent || '' })}
+                  >
+                    {curEvidence.photo.caption}
+                  </div>
+                  <div className="photo-cred">📍 {curEvidence.photo.credit}</div>
+
+                  <div className="paper-box">
+                    <div className="hud-kicker" style={{ color: '#6ea8d6' }}>
+                      <BookOpen /> PAPER CIENTÍFICO CITADO ({curEvidence.paper.year})
+                    </div>
+                    <div
+                      className="paper-cite"
+                      contentEditable={canEdit}
+                      suppressContentEditableWarning
+                      onBlur={(e) => updateEvidence(beat, 'paper', { citation: e.currentTarget.textContent || '' })}
+                    >
+                      {curEvidence.paper.citation}
+                    </div>
+                    <div
+                      className="paper-finding"
+                      contentEditable={canEdit}
+                      suppressContentEditableWarning
+                      onBlur={(e) => updateEvidence(beat, 'paper', { finding: e.currentTarget.textContent || '' })}
+                    >
+                      {curEvidence.paper.finding}
+                    </div>
+                    <a className="paper-link" href={curEvidence.paper.doiOrUrl} target="_blank" rel="noreferrer">
+                      <ExternalLink size={11} /> Abrir DOI / Fuente: {curEvidence.paper.shortCite}
+                    </a>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
+        )}
 
-          {/* 2. Tarjeta de Evidencia Fotográfica Real y Paper Científico con Cita APA/DOI */}
-          <div className="hud-card">
-            <div className="hud-head">
-              <span className="hud-kicker">
-                <Camera /> EVIDENCIA FOTOGRÁFICA Y CITA CIENTÍFICA
-              </span>
-              <span className="kick">{curEvidence.photo.site === 'chr' ? 'COPENHAGUE' : 'MORAY, ESCOCIA'}</span>
-            </div>
-
-            <div className="evidence-grid">
-              <div
-                className="photo-frame"
-                onClick={() => setZoomPhoto(curEvidence.photo)}
-                title="Haz clic para ampliar fotografía real verificada"
-              >
-                <img src={curEvidence.photo.url} alt={curEvidence.photo.caption} loading="eager" />
-                <div className="photo-tag">{curEvidence.photo.year}</div>
-              </div>
-              <div className="photo-meta">
-                <div
-                  className="photo-cap"
-                  contentEditable={editMode}
-                  suppressContentEditableWarning
-                  onBlur={(e) => updateEvidence(beat, 'photo', { caption: e.currentTarget.textContent || '' })}
-                >
-                  {curEvidence.photo.caption}
-                </div>
-                <div
-                  className="photo-cred"
-                  contentEditable={editMode}
-                  suppressContentEditableWarning
-                  onBlur={(e) => updateEvidence(beat, 'photo', { location: e.currentTarget.textContent || '' })}
-                >
-                  📍 {curEvidence.photo.location} · {curEvidence.photo.credit}
-                </div>
-              </div>
-            </div>
-
-            <div className="paper-box">
-              <div className="hud-kicker" style={{ color: '#6ea8d6' }}>
-                <BookOpen /> PAPER / REFERENCIA ACADÉMICA ({curEvidence.paper.year})
-              </div>
-              <div
-                className="paper-cite"
-                contentEditable={editMode}
-                suppressContentEditableWarning
-                onBlur={(e) => updateEvidence(beat, 'paper', { citation: e.currentTarget.textContent || '' })}
-              >
-                {curEvidence.paper.citation}
-              </div>
-              <div
-                className="paper-finding"
-                contentEditable={editMode}
-                suppressContentEditableWarning
-                onBlur={(e) => updateEvidence(beat, 'paper', { finding: e.currentTarget.textContent || '' })}
-              >
-                {curEvidence.paper.finding}
-              </div>
-              <a className="paper-link" href={curEvidence.paper.doiOrUrl} target="_blank" rel="noreferrer">
-                <ExternalLink size={11} /> Ver fuente / DOI: {curEvidence.paper.shortCite}
-              </a>
-            </div>
-          </div>
-        </div>
-
-        {/* Panel Lateral Completo de Edición de Textos, Cifras de la Gráfica, Foto y Paper del Paso Actual */}
-        {showDrawer && (
+        {/* Cajón Lateral de Personalización (solo visible cuando se desactiva el Modo Presentación y se abre Datos & Fotos) */}
+        {!presMode && showDrawer && (
           <div id="editor-drawer" onClick={(e) => e.stopPropagation()}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
-                <div className="kick" style={{ color: '#7fbf8e' }}>EDITOR EN VIVO · PLANO {beat + 1}/40 ({curBeat.timeRange})</div>
-                <h3 style={{ font: '700 16px var(--sans)', color: '#fff' }}>Personalizar Textos, Gráfica, Foto y Cita</h3>
+                <div className="kick" style={{ color: '#7fbf8e' }}>ESTUDIO DE EDICIÓN · PLANO {beat + 1}/40 ({curBeat.timeRange})</div>
+                <h3 style={{ font: '700 15px var(--sans)', color: '#fff' }}>Modificar Textos, Cifras, Foto y Cita</h3>
               </div>
               <button className="btn" onClick={() => setShowDrawer(false)}>
                 <X />Cerrar
@@ -1129,19 +1189,18 @@ export default function App() {
                 />
               </div>
               <div className="ed-group">
-                <label>Tipo de Gráfica</label>
+                <label>Tipo de Diagrama</label>
                 <select
                   className="ed-select"
                   value={curBeat.chartKind}
                   onChange={(e) => updateBeat(beat, { chartKind: e.target.value as ChartKind })}
                 >
-                  <option value="bars">Barras Comparativas</option>
+                  <option value="timeline">Curva / Hitos</option>
                   <option value="radar">Radar Multidimensional</option>
-                  <option value="donut">Anillos (Donut %)</option>
-                  <option value="timeline">Línea de Tiempo</option>
-                  <option value="stacked">Barras Apiladas</option>
-                  <option value="gauge">Indicador Escala</option>
-                  <option value="sankey">Flujo / Balance</option>
+                  <option value="sankey">Flujo Sankey</option>
+                  <option value="donut">Anillos Concéntricos</option>
+                  <option value="bars">Barras Comparativas</option>
+                  <option value="gauge">Diales</option>
                 </select>
               </div>
             </div>
@@ -1311,20 +1370,22 @@ export default function App() {
           </div>
         )}
 
-        {/* Modal de Matriz 1.1 (también editable en vivo cuando EditMode está activo) */}
+        {/* Modal de Matriz 1.1 */}
         {showMatrix && (
           <div id="matrix-modal" onClick={(e) => e.stopPropagation()}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
               <div>
                 <div className="kick">SECCIÓN 1.1 · MATRIZ COMPARATIVA, PERIODIZACIÓN Y PAPERS CIENTÍFICOS</div>
                 <h2 style={{ font: '700 19px var(--sans)', color: '#fff', marginTop: 2 }}>
-                  Ficha Técnica, Delimitación Territorial y Corpus Bibliográfico {editMode ? '(Modo Edición Activo)' : ''}
+                  Ficha Técnica, Delimitación Territorial y Corpus Bibliográfico
                 </h2>
               </div>
               <div style={{ display: 'flex', gap: 8 }}>
-                <button className={'btn' + (editMode ? ' pri act' : '')} onClick={() => setEditMode(!editMode)}>
-                  <Edit3 />{editMode ? 'Terminar Edición' : 'Editar Celdas'}
-                </button>
+                {!presMode && (
+                  <button className={'btn' + (editMode ? ' pri act' : '')} onClick={() => setEditMode(!editMode)}>
+                    <Edit3 />{editMode ? 'Terminar Edición' : 'Editar Celdas'}
+                  </button>
+                )}
                 <button className="btn" onClick={() => setShowMatrix(false)}>
                   <X />Cerrar
                 </button>
@@ -1343,21 +1404,21 @@ export default function App() {
                 {overrides.matrix.map((r, rIdx) => (
                   <tr key={rIdx}>
                     <td
-                      contentEditable={editMode}
+                      contentEditable={canEdit}
                       suppressContentEditableWarning
                       onBlur={(e) => updateMatrixCell(rIdx, 'criterio', e.currentTarget.textContent || '')}
                     >
                       {r.criterio}
                     </td>
                     <td
-                      contentEditable={editMode}
+                      contentEditable={canEdit}
                       suppressContentEditableWarning
                       onBlur={(e) => updateMatrixCell(rIdx, 'chr', e.currentTarget.textContent || '')}
                     >
                       {r.chr}
                     </td>
                     <td
-                      contentEditable={editMode}
+                      contentEditable={canEdit}
                       suppressContentEditableWarning
                       onBlur={(e) => updateMatrixCell(rIdx, 'fnd', e.currentTarget.textContent || '')}
                     >
@@ -1412,18 +1473,18 @@ export default function App() {
           </div>
         )}
 
-        {/* Barra Superior con Cronómetro de Exposición de 20 Minutos + Controles de Edición en Vivo */}
+        {/* Barra Superior Limpia en Modo Presentación */}
         <div id="bar">
           <div id="brand">
             <div className="logo"><Network /></div>
             <div>
-              <h1>Christiania ⇄ Findhorn · 20 Min (40 Planos × 30s)</h1>
-              <p>Sección 1.1 · Planos 3D, Diagramas Cuantitativos, Fotos Reales y Papers</p>
+              <h1>Christiania ⇄ Findhorn</h1>
+              <p>Sección 1.1 · 40 Planos × 30s (20 Min)</p>
             </div>
           </div>
 
-          <div className="timer-box" title="Progreso del segmento actual de 30 segundos y tiempo total de 20:00">
-            <Timer size={15} color="#7fbf8e" />
+          <div className="timer-box" title="Cronómetro de exposición de 20 minutos (cambia de plano cada 30 segundos)">
+            <Timer size={14} color="#7fbf8e" />
             <span>{fmtMMSS(totalElapsedSec)} / 20:00</span>
             <div className="t-progress">
               <div className="t-fill" style={{ width: `${((secInBeat + 1) / 30) * 100}%` }} />
@@ -1434,28 +1495,19 @@ export default function App() {
           <button
             className={'btn pri' + (autoPlay ? ' act' : '')}
             onClick={() => setAutoPlay(!autoPlay)}
-            title="Iniciar o pausar el avance automático cada 30 segundos (20 minutos en total)"
+            title="Iniciar o pausar el avance automático cada 30 segundos"
           >
             {autoPlay ? <Pause /> : <Play />}
-            <span className="bt">{autoPlay ? 'Pausar 30s' : 'Auto 30s (20m)'}</span>
+            <span className="bt">{autoPlay ? 'Pausar' : 'Exposición 20m'}</span>
           </button>
 
           <button
-            className={'btn' + (editMode ? ' pri act' : '')}
-            onClick={() => setEditMode(!editMode)}
-            title="Activar edición directa haciendo clic sobre cualquier texto en pantalla"
+            className={'btn' + (hidePanels ? ' pri act' : '')}
+            onClick={() => setHidePanels(!hidePanels)}
+            title="Ocultar tarjetas laterales para ver los modelos 3D a pantalla completa"
           >
-            <Edit3 />
-            <span className="bt">{editMode ? 'Editando Textos' : 'Editar Textos'}</span>
-          </button>
-
-          <button
-            className={'btn' + (showDrawer ? ' pri act' : '')}
-            onClick={() => setShowDrawer(!showDrawer)}
-            title="Abrir panel para editar cifras de las gráficas, cambiar fotos o importar/exportar JSON"
-          >
-            <Sliders />
-            <span className="bt">Datos &amp; Fotos</span>
+            <Compass />
+            <span className="bt">{hidePanels ? 'Mostrar Paneles' : 'Solo 3D'}</span>
           </button>
 
           <button
@@ -1472,36 +1524,66 @@ export default function App() {
             title="Alternar entre los Planos 3D extruidos y la Cartografía 2D"
           >
             <Layers />
-            <span className="bt">{view3d ? 'Mapa 2D' : 'Planos 3D'}</span>
+            <span className="bt">{view3d ? '2D' : '3D'}</span>
             {view3d && k3p < 1 && <span className="kick" style={{ marginLeft: 4 }}>{Math.round(k3p * 100)}%</span>}
           </button>
+
+          {/* Conmutador Modo Presentación vs Personalizar (En Modo Presentación oculta todo lo editable) */}
+          <button
+            className={'btn' + (!presMode ? ' pri act' : '')}
+            onClick={() => {
+              const nextPres = !presMode;
+              setPresMode(nextPres);
+              if (nextPres) {
+                setEditMode(false);
+                setShowDrawer(false);
+              }
+            }}
+            title={
+              presMode
+                ? 'Modo Presentación activo (interfaz limpia). Clic para mostrar herramientas de edición.'
+                : 'Volver a Modo Presentación limpio'
+            }
+          >
+            <Sliders />
+            <span className="bt">{presMode ? 'Modo Presentación' : 'Salir de Edición'}</span>
+          </button>
+
+          {/* Controles de edición SOLO visibles cuando se sale del Modo Presentación */}
+          {!presMode && (
+            <>
+              <button
+                className={'btn' + (editMode ? ' pri act' : '')}
+                onClick={() => setEditMode(!editMode)}
+                title="Habilitar edición haciendo clic sobre cualquier texto"
+              >
+                <Edit3 />
+                <span className="bt">{editMode ? 'Texto Directo: ON' : 'Editar Texto'}</span>
+              </button>
+              <button
+                className={'btn' + (showDrawer ? ' pri act' : '')}
+                onClick={() => setShowDrawer(!showDrawer)}
+                title="Abrir cajón para modificar datos de gráficas, fotos y citas"
+              >
+                <Sliders />
+                <span className="bt">Panel Datos</span>
+              </button>
+            </>
+          )}
         </div>
 
-        <div id="legend">
-          <span>
-            <svg width="24" height="8"><path d="M1 4H23" stroke="#e6956a" strokeWidth="2.2" strokeLinecap="round" /></svg>
-            🇩🇰 Christiania (34 ha)
-          </span>
-          <span>
-            <svg width="24" height="8"><path d="M1 4H23" stroke="#7fbf8e" strokeWidth="2.2" strokeLinecap="round" /></svg>
-            🏴󠁧󠁢󠁳󠁣󠁴󠁿 Findhorn (14–30 ha)
-          </span>
-          <span>
-            <svg width="24" height="8"><path d="M1 4H23" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" /></svg>
-            tensión / conflicto
-          </span>
-          <span>
-            <svg width="24" height="8"><path d="M1 4H23" stroke="#8e8e8e" strokeWidth="2" strokeLinecap="round" strokeDasharray="5 4" /></svg>
-            dependencia red pública
-          </span>
-        </div>
-
-        {/* Barra inferior con los 40 ticks (cada uno = 30 segundos) */}
+        {/* Barra inferior con leyenda integrada + 40 pasos de 30s */}
         <div id="nav">
           <button className="btn" style={{ visibility: beat === 0 ? 'hidden' : 'visible' }} onClick={() => go(beat - 1)}>
-            <ArrowLeft />Plano Anterior
+            <ArrowLeft />Anterior
           </button>
           <div className="steps">
+            <div className="inline-legend hidemob">
+              <span><i style={{ background: '#e6956a' }} />🇩🇰 Christiania (34 ha)</span>
+              <span><i style={{ background: '#7fbf8e' }} />🏴󠁧󠁢󠁳󠁣󠁴󠁿 Findhorn (14–30 ha)</span>
+              <span><i style={{ background: '#fff' }} />Tensión</span>
+              <span><i className="dsh" />Red pública externa</span>
+            </div>
             <div className="ticks">
               {BEATS.map((bItem, i) => (
                 <span
@@ -1509,7 +1591,7 @@ export default function App() {
                   onClick={() => go(i)}
                   title={`Plano ${i + 1}/40 (${bItem.timeRange} · ${bItem.title})`}
                   style={{
-                    height: i === beat ? 16 : i % 5 === 0 ? 11 : 6,
+                    height: i === beat ? 15 : i % 5 === 0 ? 10 : 5,
                     background: i === beat ? '#7fbf8e' : i < beat ? '#f0f0f0' : '#383838',
                   }}
                 />
@@ -1517,7 +1599,7 @@ export default function App() {
             </div>
             <span
               className="kick hidemob"
-              contentEditable={editMode}
+              contentEditable={canEdit}
               suppressContentEditableWarning
               onBlur={(e) => updateBeat(beat, { title: e.currentTarget.textContent || '' })}
             >
@@ -1525,7 +1607,7 @@ export default function App() {
             </span>
           </div>
           <button className="btn" style={{ visibility: beat === N - 1 ? 'hidden' : 'visible' }} onClick={() => go(beat + 1)}>
-            Siguiente Plano (30s)<ArrowRight />
+            Siguiente (30s)<ArrowRight />
           </button>
         </div>
       </div>
