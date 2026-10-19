@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { C, useStage } from './kit';
+import { Ico, ico } from './icons';
+const SI = (t: string, x: number, y: number, s: number, c: string) => { const I = ico(t); return <I x={x - s / 2} y={y - s / 2} width={s} height={s} color={c} strokeWidth={1.8} />; };
 
 const D = (i: number, base = 0.15, step = 0.28) => ({ animationDelay: `${base + i * step}s` });
 
@@ -19,7 +21,7 @@ export function Flow({ title, items }: { title?: string; items: { h: string; p?:
 }
 function FlowItem({ it, i, last, sel, on }: any) {
   return <>
-    <div className={'card po' + (sel ? ' sel' : '')} onClick={on} style={{ ...D(i, 0.1, 0.35), ['--c' as any]: it.c ?? C.mute }}><span className="k">{String(i + 1).padStart(2, '0')}</span><h4>{it.h}</h4>{it.p && <p>{it.p}</p>}</div>
+    <div className={'card po' + (sel ? ' sel' : '')} onClick={on} style={{ ...D(i, 0.1, 0.35), ['--c' as any]: it.c ?? C.mute }}><span className="ico"><Ico t={it.h + ' ' + (it.p ?? '')} /></span><span className="k">{String(i + 1).padStart(2, '0')}</span><h4>{it.h}</h4>{it.p && <p>{it.p}</p>}</div>
     {!last && <div className="ar po" style={D(i, 0.3, 0.35)}><Arr /></div>}
   </>;
 }
@@ -28,7 +30,7 @@ export function Cols({ cols }: { cols: { h: string; c?: string; rows: [string, s
   return <div className="dg"><div className="cols" style={{ ['--n' as any]: cols.length }}>
     {cols.map((c, i) => <div key={i} className="col po" style={{ ...D(i, 0.1, 0.25), ['--c' as any]: c.c ?? C.mute }}>
       <h4>{c.h}</h4>
-      {c.rows.map((r, k) => <div className="row po" key={k} style={D(k, 0.4 + i * 0.12, 0.3)}><span>{r[0]}</span><span>{r[1]}</span></div>)}
+      {c.rows.map((r, k) => <div className="row po" key={k} style={D(k, 0.4 + i * 0.12, 0.3)}><span><i className="rico"><Ico t={r[0] + ' ' + r[1]} size={16} /></i>{r[0]}</span><span>{r[1]}</span></div>)}
     </div>)}
   </div></div>;
 }
@@ -45,7 +47,7 @@ export function Timeline({ events, phases, title }: { title?: string; events: { 
       <div className="axis"><b style={{ width: pct + '%' }} /></div>
       <div className="evs">
         {events.map((e, i) => <button key={i} className={'ev po' + (sel === i ? ' sel' : '')} onClick={() => tog(i)} style={{ ...D(i, 0.3, 0.35), ['--c' as any]: e.c ?? C.ink, opacity: sel !== null && sel !== i ? 0.4 : undefined }}>
-          <span className="dot" /><span className="y">{e.y}</span><h4>{e.h}</h4>{e.p && <p>{e.p}</p>}
+          <span className="dot" /><span className="y"><Ico t={e.h + ' ' + (e.p ?? '')} size={18} /> {e.y}</span><h4>{e.h}</h4>{e.p && <p>{e.p}</p>}
         </button>)}
       </div>
     </div>
@@ -57,7 +59,7 @@ export function Chk({ title, items, n }: { title?: string; n?: number; items: { 
   return <div className="dg">
     {title && <h3 className="po">{title}</h3>}
     <div className="grid" style={{ ['--n' as any]: n ?? items.length }}>
-      {items.map((it, i) => <div key={i} className={'card po' + (sel === i ? ' sel' : '')} onClick={() => tog(i)} style={{ ...D(i, 0.1, 0.25), ['--c' as any]: it.c ?? C.mute }}>{it.k && <span className="k">{it.k}</span>}<h4>{it.h}</h4>{it.p && <p>{it.p}</p>}</div>)}
+      {items.map((it, i) => <div key={i} className={'card po' + (sel === i ? ' sel' : '')} onClick={() => tog(i)} style={{ ...D(i, 0.1, 0.25), ['--c' as any]: it.c ?? C.mute }}><span className="ico"><Ico t={it.h + ' ' + (it.p ?? '') + ' ' + (it.k ?? '')} /></span>{it.k && <span className="k">{it.k}</span>}<h4>{it.h}</h4>{it.p && <p>{it.p}</p>}</div>)}
     </div>
   </div>;
 }
@@ -69,7 +71,7 @@ export function Big({ children, sub }: { children: ReactNode; sub?: ReactNode })
 export function Qs({ items, title }: { title?: string; items: { k: string; q: string }[] }) {
   const [sel, tog] = useSel();
   return <div className="dg">{title && <h3 className="po">{title}</h3>}<div className="qs">
-    {items.map((it, i) => <div key={i} className={'card po' + (sel === i ? ' sel' : '')} onClick={() => tog(i)} style={{ ...D(i, 0.15, 0.4), ['--c' as any]: [C.chr, C.fnd, C.ken][i % 3] }}><span className="k">{it.k}</span><h4>{it.q}</h4></div>)}
+    {items.map((it, i) => <div key={i} className={'card po' + (sel === i ? ' sel' : '')} onClick={() => tog(i)} style={{ ...D(i, 0.15, 0.4), ['--c' as any]: [C.chr, C.fnd, C.ken][i % 3] }}><span className="ico"><Ico t={it.q + ' ' + it.k} size={28} /></span><span className="k">{it.k}</span><h4>{it.q}</h4></div>)}
   </div></div>;
 }
 
@@ -99,7 +101,8 @@ export function Cycle({ nodes, center, breaks = [], examples }: { nodes: { h: st
     {center && <g className="po" style={D(n, 0.6, 0.55)}>{ML(cx, cy - 8, center, { serif: true, it: true, fs: mobile ? 36 : 34, c: C.mute })}</g>}
     {pos.map((p, i) => <g key={i} className="po" style={D(i, 0.3, 0.55)}>
       <circle cx={p[0]} cy={p[1]} r={mobile ? 92 : 86} fill="#1a1a17" stroke={nodes[i].c ?? C.ink} strokeWidth={3} />
-      {ML(p[0], p[1] - (nodes[i].h.split('\n').length - 1) * fs * 0.6 + fs * 0.35, nodes[i].h, { fs, fw: 600 })}
+      {SI(nodes[i].h, p[0], p[1] - (mobile ? 58 : 54), mobile ? 30 : 28, nodes[i].c ?? C.ink)}
+      {ML(p[0], p[1] - (nodes[i].h.split('\n').length - 1) * fs * 0.6 + fs * 0.55, nodes[i].h, { fs, fw: 600 })}
     </g>)}
     {breaks.map((b, i) => {
       const a = -Math.PI / 2 + ((b.at + 0.5) / n) * Math.PI * 2; const x = cx + R * Math.cos(a), y = cy + R * Math.sin(a);
@@ -134,8 +137,9 @@ export function Net({ center, nodes, links = [] }: { center: { h: string; c: str
     {pos.map((p, i) => <g key={i} className="po" style={D(i, 0.5, 0.3)}>
       <rect x={p[0] - (mobile ? 170 : 185)} y={p[1] - 46} width={mobile ? 340 : 370} height={nodes[i].p ? 96 : 66} rx={6} fill="#1a1a17" stroke={nodes[i].c} strokeWidth={2.5} />
       <rect x={p[0] - (mobile ? 170 : 185)} y={p[1] - 46} width={8} height={nodes[i].p ? 96 : 66} fill={nodes[i].c} />
-      {T(p[0], p[1] - 10, nodes[i].h, { fs: mobile ? 23 : 22, fw: 600 })}
-      {nodes[i].p && ML(p[0], p[1] + 20, nodes[i].p!, { fs: mobile ? 17 : 17, c: C.mute, fw: 400 })}
+      {SI(nodes[i].h + ' ' + (nodes[i].p ?? ''), p[0] - (mobile ? 140 : 155), p[1] - 12 + (nodes[i].p ? 14 : 0), 30, nodes[i].c)}
+      {T(p[0] + 18, p[1] - 10, nodes[i].h, { fs: mobile ? 23 : 22, fw: 600 })}
+      {nodes[i].p && ML(p[0] + 18, p[1] + 20, nodes[i].p!, { fs: mobile ? 17 : 17, c: C.mute, fw: 400 })}
     </g>)}
   </svg>;
 }
@@ -166,7 +170,8 @@ export function Sankey({ sources, mid, targets, note, leak }: { sources: { h: st
   const lab = (l: number, sPos: number, txt: string, side: 'a' | 'b', c: string, i: number) => {
     const [x, y] = mobile ? [sPos, l + (side === 'a' ? -14 - (i % 2) * 44 : 34 + (i % 2) * 44)] : [l + (side === 'a' ? -14 : 14), sPos + 8];
     const a = mobile ? 'middle' : side === 'a' ? 'end' : 'start';
-    return <g key={txt} className="po" style={D(i, 0.2, 0.2)}>{ML(x, y - (mobile && side === 'a' ? (txt.split('\n').length - 1) * fs * 1.2 : 0), txt, { fs: mobile ? 19 : fs, a, c, fw: 600 })}</g>;
+    const ix = mobile ? x : side === 'a' ? x - txt.split('\n').reduce((m2, l2) => Math.max(m2, l2.length), 0) * fs * 0.55 - 22 : x + txt.split('\n').reduce((m2, l2) => Math.max(m2, l2.length), 0) * fs * 0.55 + 22;
+    return <g key={txt} className="po" style={D(i, 0.2, 0.2)}>{SI(txt, ix, mobile ? y - (side === 'a' ? 30 + (txt.split('\n').length - 1) * fs * 1.2 : -34 - (txt.split('\n').length - 1) * fs * 1.2) : y - 7, 26, c)}{ML(x, y - (mobile && side === 'a' ? (txt.split('\n').length - 1) * fs * 1.2 : 0), txt, { fs: mobile ? 19 : fs, a, c, fw: 600 })}</g>;
   };
   return <svg className="vis" viewBox={`0 0 ${W} ${H}`}>
     {src.map((r, i) => <path key={'s' + i} d={band(p0 + 10, r.s, pm - mw / 2, r.ms, r.h)} fill={r.c ?? C.ink} fillOpacity={hv === 's' + i ? 0.7 : 0.34} className="fa" style={{ ...D(i, 0.4, 0.3), cursor: 'pointer', transition: 'fill-opacity .2s' }} onPointerEnter={() => setHv('s' + i)} onPointerLeave={() => setHv(null)} />)}
@@ -191,6 +196,7 @@ export function Bars({ rows, max, unit, hl = [], title }: { rows: { k: string; v
     {rows.map((r, i) => {
       const y = 80 + i * rh; const w = ((x1 - x0) * r.v) / max; const on = hl.includes(i);
       return <g key={i}>
+        {SI(r.k, 26, y + rh * 0.38, 28, r.c ?? C.mute)}
         {T(x0 - 16, y + rh * 0.42, r.k, { a: 'end', fs: mobile ? 23 : 25, fw: on ? 700 : 500 })}
         <rect x={x0} y={y + rh * 0.12} width={w} height={rh * 0.52} fill={r.c ?? (on ? C.chr : '#b9b2a2')} style={{ transformOrigin: `${x0}px 0`, animation: `grow .9s ${0.2 + i * 0.12}s cubic-bezier(.3,.7,.3,1) both` }} />
         <g className="po" style={D(i, 0.8, 0.12)}>{T(x0 + w + 12, y + rh * 0.48, `${r.v.toString().replace('.', ',')} ${unit}`, { a: 'start', fs: mobile ? 22 : 24, fw: 600, c: on ? C.chr : C.mute })}</g>
@@ -283,8 +289,9 @@ export function CLD({ step }: { step: number }) {
     </g>;
   };
   const node = (k: string, c: string, i: number, base: number) => <g key={k} className="po" style={D(i, base, 0.25)}>
-    <ellipse cx={n[k][0]} cy={n[k][1]} rx={mobile ? 120 : 112} ry={62} fill="#1a1a17" stroke={c} strokeWidth={3} />
-    {ML(n[k][0], n[k][1] - 5, lab[k], { fs: mobile ? 24 : 23, fw: 600 })}
+    <ellipse cx={n[k][0]} cy={n[k][1]} rx={mobile ? 122 : 116} ry={70} fill="#1a1a17" stroke={c} strokeWidth={3} />
+    {SI(lab[k], n[k][0], n[k][1] - 40, 24, c)}
+    {ML(n[k][0], n[k][1] + 4, lab[k], { fs: mobile ? 23 : 22, fw: 600 })}
   </g>;
   return <svg className="vis" viewBox={`0 0 ${W} ${H}`}>
     <defs>
@@ -336,7 +343,7 @@ export function Metab({ inputs, outputs, center, c, note }: { inputs: string[]; 
       const [x1, y1, x2, y2] = mobile ? [100 + t * 600, 60, box[0] + 40 + t * (box[2] - 80), box[1]] : [330, 120 + t * 560, box[0], box[1] + 30 + t * (box[3] - 60)];
       return <g key={s} className="po" style={D(i, 0.4, 0.3)}>
         <path d={`M${x1} ${y1 + (mobile ? 40 : 0)}C${mobile ? x1 : (x1 + x2) / 2} ${mobile ? (y1 + y2) / 2 : y1} ${mobile ? x2 : (x1 + x2) / 2} ${mobile ? (y1 + y2) / 2 : y2} ${x2} ${y2}`} fill="none" stroke={C.ink} strokeWidth={3} className="flowdash" />
-        {mobile ? T(x1, y1 + 22, s, { fs: 20, fw: 600 }) : T(x1 - 12, y1 + 9, s, { a: 'end', fs: 28, fw: 600 })}
+        {mobile ? <>{SI(s, x1, y1 - 6, 26, C.ink)}{T(x1, y1 + 26, s, { fs: 20, fw: 600 })}</> : <>{SI(s, x1 - 14 - s.length * 15.5 - 22, y1, 30, C.ink)}{T(x1 - 12, y1 + 9, s, { a: 'end', fs: 28, fw: 600 })}</>}
       </g>;
     })}
     {outputs.map((s, i) => {
@@ -344,7 +351,7 @@ export function Metab({ inputs, outputs, center, c, note }: { inputs: string[]; 
       const [x1, y1, x2, y2] = mobile ? [box[0] + 40 + t * (box[2] - 80), box[1] + box[3], 100 + t * 600, 900] : [box[0] + box[2], box[1] + 30 + t * (box[3] - 60), 1270, 120 + t * 560];
       return <g key={s} className="po" style={D(i, 1.6, 0.3)}>
         <path d={`M${x1} ${y1}C${mobile ? x1 : (x1 + x2) / 2} ${mobile ? (y1 + y2) / 2 : y1} ${mobile ? x2 : (x1 + x2) / 2} ${mobile ? (y1 + y2) / 2 : y2} ${x2} ${y2 - (mobile ? 30 : 0)}`} fill="none" stroke={C.chr} strokeWidth={3} className="flowdash" />
-        {mobile ? T(x2, y2 + 2, s, { fs: 20, fw: 600, c: C.chr }) : T(x2 + 12, y2 + 9, s, { a: 'start', fs: 28, fw: 600, c: C.chr })}
+        {mobile ? <>{SI(s, x2, y2 - 46, 26, C.chr)}{T(x2, y2 + 2, s, { fs: 20, fw: 600, c: C.chr })}</> : <>{SI(s, x2 + 30, y2, 30, C.chr)}{T(x2 + 54, y2 + 9, s, { a: 'start', fs: 28, fw: 600, c: C.chr })}</>}
       </g>;
     })}
     {!mobile && <>{T(330, 70, 'ENTRAN', { a: 'end', fs: 18, fw: 700, c: C.mute })}{T(1270, 70, 'SALEN', { a: 'start', fs: 18, fw: 700, c: C.mute })}</>}

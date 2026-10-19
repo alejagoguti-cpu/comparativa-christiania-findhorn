@@ -2,6 +2,7 @@
 import type { ReactNode } from 'react';
 import { C, GeoMap, Pair, Photo, FigureGround, TILE_CREDIT, type Ann, type Pt } from './kit';
 import { Axo } from './Axo';
+import { Ico } from './icons';
 import { ABM, Bars, Big, Chk, CLD, Cols, Cycle, Energy, Flow, Layers, Metab, Net, Qs, Sankey, Scale, Timeline } from './diagrams';
 
 export type Block = { n: string; t: string; time: string; part: string };
@@ -816,7 +817,7 @@ export const STEPS: Step[] = [
   },
   {
     b: 12, t: 'No hay una fórmula única de sostenibilidad', d: '',
-    v: () => <Big sub={<p style={{ color: C.mute, fontSize: 17, margin: 0 }}>…y siempre debe evaluarse en relación con las redes territoriales de las que depende.</p>}>La autonomía se construye mediante <em>acuerdos</em>, <em>aprendizaje</em> y <em>mantenimiento</em>.</Big>,
+    v: () => <Big sub={<div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>{[['Acuerdos', 'acuerdo', C.chr], ['Aprendizaje', 'aprendizaje', C.fnd], ['Mantenimiento', 'mantenimiento', C.ken], ['Redes territoriales', 'red dependencia externa', C.hl]].map(([t, q, c], n) => <div key={n} className="card po" style={{ ['--c' as any]: c, animationDelay: `${0.5 + n * 0.25}s`, display: 'flex', alignItems: 'center', gap: 12, padding: '14px 18px' }}><span className="ico" style={{ margin: 0 }}><Ico t={q} /></span><h4 style={{ margin: 0, fontSize: 20 }}>{t}</h4></div>)}</div>}>La autonomía se construye mediante <em>acuerdos</em>, <em>aprendizaje</em> y <em>mantenimiento</em>.</Big>,
     nota: 'La comparación no demuestra que exista una fórmula única de sostenibilidad. Demuestra que la autonomía se construye mediante acuerdos, aprendizaje y mantenimiento, y que siempre debe evaluarse en relación con las redes territoriales de las que depende.',
   },
   {

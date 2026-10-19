@@ -174,25 +174,53 @@ export function Anns({ anns, P, u, data, M, vb }: { anns: Ann[]; P: (p: Pt) => n
   return <g>{out}</g>;
 }
 
+
+/** puntos de interés de las anotaciones (para el zoom automático) */
+export function focusPts(anns: Ann[]): Pt[] {
+  const o: Pt[] = [];
+  for (const a of anns) {
+    if (a.t === 'ring' || a.t === 'dot' || a.t === 'tag') o.push(a.at);
+    else if (a.t === 'arrow') o.push(a.to);
+    else if (a.t === 'box') { o.push(a.a); o.push(a.b); }
+  }
+  return o;
+}
+
 /* ---------- foto anotada (clic para ampliar) ---------- */
-export function Photo({ img, anns = [], crop, mcrop, frac = true }: { img: string; anns?: Ann[]; crop?: [number, number, number, number]; mcrop?: [number, number, number, number]; frac?: boolean }) {
+export function Photo({ img, anns = [], crop, mcrop, frac = true, auto = true }: { img: string; anns?: Ann[]; crop?: [number, number, number, number]; mcrop?: [number, number, number, number]; frac?: boolean; auto?: boolean }) {
   const { mobile } = useStage();
   const [f, w, h] = IMG[img];
-  const base = (mobile && mcrop) || crop || [0, 0, w, h];
-  const [z, setZ] = useState<null | [number, number]>(null);
-  const vb = z ? [Math.max(base[0], Math.min(base[0] + base[2] * 0.6, z[0] - base[2] * 0.2)), Math.max(base[1], Math.min(base[1] + base[3] * 0.6, z[1] - base[3] * 0.2)), base[2] * 0.4, base[3] * 0.4] : base;
-  const u = (base[2] / 62) * (mobile ? 1.45 : 1);
+  const vb = (mobile && mcrop) || crop || [0, 0, w, h];
+  const [z, setZ] = useState({ k: 1, x: 0, y: 0, slow: false });
+  const touched = useRef(false);
+  const u = (vb[2] / 62) * (mobile ? 1.45 : 1);
   const P = (p: Pt) => (frac ? [p[0] * w, p[1] * h] : p);
+  const fit = (pts: number[][], kmax: number) => {
+    const xs = pts.map((p) => p[0]), ys = pts.map((p) => p[1]);
+    const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
+    const k2 = Math.max(1, Math.min(kmax, 0.72 * Math.min(vb[2] / Math.max(1, x1 - x0), vb[3] / Math.max(1, y1 - y0))));
+    const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
+    return { k: k2, x: Math.min(vb[0] * (1 - k2), Math.max(vb[0] + vb[2] - (vb[0] + vb[2]) * k2, vb[0] + vb[2] / 2 - cx * k2)), y: Math.min(vb[1] * (1 - k2), Math.max(vb[1] + vb[3] - (vb[1] + vb[3]) * k2, vb[1] + vb[3] / 2 - cy * k2)) };
+  };
+  useEffect(() => {
+    const pts = focusPts(anns).map(P); if (!auto || pts.length === 0) return;
+    const t = setTimeout(() => { if (touched.current) return; const v = fit(pts, 1.9); if (v.k > 1.12) setZ({ ...v, slow: true }); }, 2900);
+    const t2 = setTimeout(() => { if (!touched.current) setZ((s) => ({ ...s, k: 1, x: 0, y: 0, slow: true })); }, 8200);
+    return () => { clearTimeout(t); clearTimeout(t2); };
+  }, []); // eslint-disable-line
   const click = (e: React.MouseEvent<SVGSVGElement>) => {
-    e.stopPropagation();
-    if (z) return setZ(null);
+    e.stopPropagation(); touched.current = true;
+    if (z.k > 1.05) return setZ({ k: 1, x: 0, y: 0, slow: false });
     const sv = e.currentTarget; const pt = sv.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY;
-    const m = sv.getScreenCTM(); if (!m) return; const q = pt.matrixTransform(m.inverse()); setZ([q.x, q.y]);
+    const m = sv.getScreenCTM(); if (!m) return; const q = pt.matrixTransform(m.inverse());
+    setZ({ ...fit([[q.x - vb[2] * 0.12, q.y - vb[3] * 0.12], [q.x + vb[2] * 0.12, q.y + vb[3] * 0.12]], 2.6), slow: false });
   };
   return <div className="fill">
-    <svg className={'vis zoomable' + (z ? ' z' : '')} viewBox={vb.join(' ')} preserveAspectRatio="xMidYMid meet" style={{ overflow: 'hidden', transition: 'all .4s' }} onClick={click}>
-      <image href={`guion/img/${f}`} x={0} y={0} width={w} height={h} preserveAspectRatio="none" />
-      <Anns anns={anns} P={P} u={u} vb={base} />
+    <svg className={'vis zoomable' + (z.k > 1.05 ? ' z' : '')} viewBox={vb.join(' ')} preserveAspectRatio="xMidYMid meet" style={{ overflow: 'hidden' }} onClick={click}>
+      <g transform={`translate(${z.x} ${z.y}) scale(${z.k})`} style={{ transition: `transform ${z.slow ? 2.4 : 0.6}s cubic-bezier(.4,0,.2,1)` }}>
+        <image href={`guion/img/${f}`} x={0} y={0} width={w} height={h} preserveAspectRatio="none" />
+        <Anns anns={anns} P={P} u={u} vb={vb} />
+      </g>
     </svg>
   </div>;
 }
@@ -246,6 +274,21 @@ function GeoMapInner({ site, bbox, base = 'sat', plan = false, anns = [], dim = 
   const metersPerPx = (40075016.7 * Math.cos(((s0 + n0) / 2) * Math.PI / 180)) / (256 * 2 ** z);
   // vista interactiva (zoom y desplazamiento)
   const [view, setView] = useState({ k: 1, x: 0, y: 0 });
+  const [slow, setSlow] = useState(false);
+  const touched = useRef(false);
+  useEffect(() => {
+    const pts = focusPts(anns).map(P); if (pts.length === 0) return;
+    const t = setTimeout(() => {
+      if (touched.current) return;
+      const xs = pts.map((p) => p[0]), ys = pts.map((p) => p[1]);
+      const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
+      const k2 = Math.max(1, Math.min(1.7, 0.62 * Math.min(vw / Math.max(1, x1 - x0), vh / Math.max(1, y1 - y0))));
+      if (k2 < 1.15) return;
+      setSlow(true); setView(clampV({ k: k2, x: vw / 2 - ((x0 + x1) / 2) * k2, y: vh / 2 - ((y0 + y1) / 2) * k2 }));
+    }, 3200);
+    const t2 = setTimeout(() => { if (!touched.current) { setSlow(true); setView({ k: 1, x: 0, y: 0 }); } }, 9000);
+    return () => { clearTimeout(t); clearTimeout(t2); };
+  }, []); // eslint-disable-line
   const [show, setShow] = useState({ calles: true, anot: true });
   const [tip, setTip] = useState<null | { x: number; y: number; t: string; s: string }>(null);
   const drag = useRef<null | { x: number; y: number; vx: number; vy: number; moved: boolean }>(null);
@@ -293,13 +336,13 @@ function GeoMapInner({ site, bbox, base = 'sat', plan = false, anns = [], dim = 
   const TL = base === 'gris' ? TILES.dark : TILES[base];
   const hover = (t: string, s2: string) => (e: React.PointerEvent) => { const r = wrap.current!.getBoundingClientRect(); setTip({ x: e.clientX - r.left, y: e.clientY - r.top, t, s: s2 }); };
   return <div className="fill" ref={wrap} style={{ touchAction: 'none' }}
-    onWheel={(e) => { const [px, py] = svgPt(e.clientX, e.clientY); zoomAt(px, py, e.deltaY < 0 ? 1.25 : 0.8); }}
-    onPointerDown={(e) => { drag.current = { x: e.clientX, y: e.clientY, vx: view.x, vy: view.y, moved: false }; }}
+    onWheel={(e) => { touched.current = true; setSlow(false); const [px, py] = svgPt(e.clientX, e.clientY); zoomAt(px, py, e.deltaY < 0 ? 1.25 : 0.8); }}
+    onPointerDown={(e) => { touched.current = true; setSlow(false); drag.current = { x: e.clientX, y: e.clientY, vx: view.x, vy: view.y, moved: false }; }}
     onPointerMove={(e) => { const d2 = drag.current; if (!d2) return; const s = svgPt(0, 0)[2]; const dx = (e.clientX - d2.x) / s, dy = (e.clientY - d2.y) / s; if (Math.abs(dx) + Math.abs(dy) > 3) d2.moved = true; setView((v) => clampV({ ...v, x: d2.vx + dx, y: d2.vy + dy })); }}
     onPointerUp={() => { drag.current = null; }} onPointerLeave={() => { drag.current = null; setTip(null); }}
     onDoubleClick={() => setView({ k: 1, x: 0, y: 0 })}>
     <svg className="vis" viewBox={`0 0 ${vw} ${vh}`} preserveAspectRatio="xMidYMid meet" style={{ overflow: 'hidden', cursor: drag.current ? 'grabbing' : 'grab' }}>
-      <g transform={`translate(${view.x} ${view.y}) scale(${view.k})`} style={{ transition: drag.current ? 'none' : 'transform .25s ease' }}>
+      <g transform={`translate(${view.x} ${view.y}) scale(${view.k})`} style={{ transition: drag.current ? 'none' : slow ? 'transform 2.4s cubic-bezier(.4,0,.2,1)' : 'transform .25s ease' }}>
         <rect x={0} y={0} width={vw} height={vh} fill="#11110f" />
         {tiles.map(([x, y]) => <image key={x + '_' + y} href={TL.replace('{z}', String(z)).replace('{x}', String(x)).replace('{y}', String(y))} x={x * 256 - ox} y={y * 256 - oy} width={256.6} height={256.6} />)}
         {dim > 0 && <rect x={0} y={0} width={vw} height={vh} fill="#000" opacity={dim} />}
