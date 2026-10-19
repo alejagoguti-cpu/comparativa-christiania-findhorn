@@ -128,7 +128,14 @@ export const STEPS: Step[] = [
   },
   {
     b: 1, t: 'Transformación progresiva: reutilizar, autoconstruir, compartir', d: 'Axonometría de las huellas reales de Christiania: edificios militares reutilizados frente a casas autoconstruidas sobre la muralla.',
-    v: () => <Axo site="christiania" center={[12.6035, 55.6745]} radius={620} groups={[
+    v: () => <Axo site="christiania" center={[12.6035, 55.6745]} radius={620} boundary={CHR_ID} marks={[
+      { at: [12.5997, 55.6735], text: 'Pusher Street', c: C.hl },
+      { at: [12.600523, 55.674664], text: 'Den Grå Hal (antigua nave militar)', c: C.chr, h: 70 },
+      { at: [12.601063, 55.672739], text: 'Den Grønne Genbrugshal (reciclaje)', c: C.chr, h: 45 },
+      { at: [12.598901, 55.674791], text: 'Entrada · Prinsessegade', c: C.ink, h: 38 },
+      { at: [12.6058, 55.6728], text: 'Stadsgraven (foso)', c: C.ken, h: 30 },
+      { at: [12.6085, 55.6768], text: 'Casas sobre la muralla', c: C.fnd, h: 50 },
+    ]} groups={[
       { name: 'Grandes naves reutilizadas (talleres, cultura)', c: C.chr, match: (f) => /Grå Hal|Genbrugshal|Operaen|Hal C|Fabrikken|Multihuset|Tinghuset|Fælleshus|Børnebyen|Fredens Ark/i.test(f[1]) },
       { name: 'Casas autoconstruidas en la muralla (Dyssen)', c: C.fnd, match: (_f, [x, y]) => x > 250 && y > -250 && y < 650 },
     ]} />,
@@ -195,6 +202,22 @@ export const STEPS: Step[] = [
     ]} />,
     src: `${gris}. Ubicación de la Living Machine según la geolocalización de fotografías de Julian Paren (geograph.org.uk).`,
     nota: 'Con el tiempo, Findhorn incorporó viviendas ecológicas, programas educativos, generación eólica y sistemas de tratamiento biológico de aguas residuales.',
+  },
+  {
+    b: 1, t: 'The Park en tres dimensiones', d: 'Huellas reales de OpenStreetMap: viviendas ecológicas, el centro educativo y los aerogeneradores.',
+    v: () => <Axo site="findhorn" center={[-3.5872, 57.6542]} radius={600} zoom0={1.45} turbines={WIND} marks={[
+      { at: WIND[1], text: 'Aerogeneradores (750 kW)', c: C.hl, h: 70 },
+      { at: [-3.593361, 57.653168], text: 'Universal Hall (educación)', c: C.ken, h: 55 },
+      { at: [-3.5948, 57.6541], text: 'West Whins (ecoviviendas)', c: C.fnd, h: 45 },
+      { at: LM, text: 'Living Machine (aprox.)', c: C.chr, h: 40 },
+      { at: [-3.592789, 57.6521], text: 'Community Centre', c: C.ink, h: 35 },
+      { at: CARAVAN, text: 'Caravana original (1962)', c: C.fnd, h: 28 },
+    ]} groups={[
+      { name: 'Ecoviviendas (West Whins, Woodside)', c: C.fnd, match: (f) => /West Whins|Woodside/i.test(f[1]) },
+      { name: 'Equipamientos comunitarios', c: C.ken, match: (f) => /Universal Hall|Community Centre|Hive|Moray Art/i.test(f[1]) },
+    ]} />,
+    src: `${OSM}. Aerogeneradores modelados en su posición OSM; altura ilustrativa.`,
+    nota: '(Vista 3D de The Park para ubicar los elementos que se acaban de nombrar.)',
   },
   {
     b: 1, t: 'Transformar un tejido existente frente a adaptarse al lugar', d: 'Los dos asentamientos a la misma escala: el borde de Christiania sobre la trama urbana; The Park disperso sobre el terreno.',

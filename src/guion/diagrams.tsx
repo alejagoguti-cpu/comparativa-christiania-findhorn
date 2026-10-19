@@ -387,22 +387,28 @@ export function Metab({ inputs, outputs, center, c, note }: { inputs: string[]; 
 /** Cuadrados de área a la misma escala. */
 export function Scale({ items }: { items: { h: string; ha: number; c: string; p?: string }[] }) {
   const { tall: mobile } = useStage();
-  const [W, H] = mobile ? [800, 900] : [1600, 800];
-  const maxA = Math.max(...items.map((i) => i.ha));
-  const big = mobile ? 520 : 560;
-  let x = mobile ? 40 : 80;
+  const [W, H] = mobile ? [800, 1000] : [1600, 800];
+  const maxA = Math.max(...items.map((i2) => i2.ha));
+  const big = mobile ? 430 : 600;
+  const bigIt = items.find((x) => x.ha === maxA)!; const small = items.filter((x) => x !== bigIt);
+  const sMax = Math.max(...small.map((x) => x.ha)); const mag = Math.round((Math.sqrt(sMax / maxA) * big) > 0 ? 220 / (Math.sqrt(sMax / maxA) * big) : 1);
+  const bx = mobile ? 60 : 80, by = mobile ? 60 : 100;
+  const ix = mobile ? 60 : 900, iy = mobile ? 580 : 160, iw = mobile ? 680 : 640, ih = mobile ? 360 : 460;
+  const tiny = (x: { ha: number }) => Math.sqrt(x.ha / maxA) * big;
   return <svg className="vis" viewBox={`0 0 ${W} ${H}`}>
-    {items.map((it, i) => {
-      const s = Math.max(3, big * Math.sqrt(it.ha / maxA)); const y = (mobile ? 90 : 120) + (big - s);
-      const g = <g key={i} className="po" style={D(i, 0.2, 0.5)}>
-        <rect x={x} y={y} width={s} height={s} fill={it.c} fillOpacity={0.85} />
-        {T(x + Math.max(s, 6) + 14, y + Math.min(s, 30) - 4 + (s < 40 ? 0 : 0), it.h, { a: 'start', fs: 24, fw: 700 })}
-        {it.p && T(x + Math.max(s, 6) + 14, y + Math.min(s, 30) + 24, it.p, { a: 'start', fs: 18, c: C.mute, fw: 400 })}
-      </g>;
-      x += s + (s < 60 ? 330 : 60);
-      if (mobile && x > W - 260) x = 40;
-      return g;
-    })}
+    <g className="po"><rect x={bx} y={by} width={big} height={big} fill={bigIt.c} fillOpacity={0.85} />{T(bx + 20, by + 44, bigIt.h, { a: 'start', fs: 34, fw: 800 })}{bigIt.p && T(bx + 20, by + 78, bigIt.p, { a: 'start', fs: 22, c: C.ink, fw: 500 })}</g>
+    {small.map((x, k) => <rect key={k} x={bx + big - 40 - k * 16} y={by + big - 40} width={Math.max(2, tiny(x))} height={Math.max(2, tiny(x))} fill={x.c} className="po" style={D(k, 0.6, 0.2)} />)}
+    <g className="po" style={D(0, 1.2)}>
+      <rect x={bx + big - 52} y={by + big - 52} width={44} height={44} fill="none" stroke={C.hl} strokeWidth={3} />
+      <path d={`M${bx + big - 8} ${by + big - 52}L${ix} ${iy}M${bx + big - 8} ${by + big - 8}L${ix} ${iy + ih}`} stroke={C.hl} strokeWidth={2} strokeDasharray="6 6" />
+      <rect x={ix} y={iy} width={iw} height={ih} rx={12} fill="#141412" stroke={C.hl} strokeWidth={3} />
+      {T(ix + 20, iy + 36, `Ampliación ×${mag} (misma escala entre sí)`, { a: 'start', fs: 20, fw: 700, c: C.hl })}
+      {small.map((x, k) => { const s2 = tiny(x) * mag; const x0 = ix + 40 + k * (iw / small.length); const y0 = iy + ih - 50 - s2; return <g key={k}>
+        <rect x={x0} y={y0} width={s2} height={s2} fill={x.c} fillOpacity={0.9} />
+        {SI(x.h, x0 + 18, y0 - 58, 26, x.c)}{T(x0, y0 - 18, x.h, { a: 'start', fs: 24, fw: 700 })}{x.p && T(x0, y0 - 42 + 0, '', {})}
+        {x.p && T(x0, iy + ih - 18, x.p, { a: 'start', fs: 19, c: C.mute, fw: 500 })}
+      </g>; })}
+    </g>
   </svg>;
 }
 

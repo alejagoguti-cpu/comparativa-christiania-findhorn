@@ -411,11 +411,13 @@ function FG({ site, center, c, boundary, R, mobile }: any) {
   const near = (g: number[]) => Math.abs((g[0] - center[0]) * k) < R * 1.3 && Math.abs((g[1] - center[1]) * kl) < R * 1.3;
   if (!d) return null;
   const bld = d.b.filter((f: any) => near(f[3])).map((f: any) => toD(f[3])).join('');
-  const water = d.w.filter((f: any) => near(f[2])).map((f: any) => toD(f[2])).join('');
+  const water = d.w.filter((f: any) => near(f[2]) || f[2].length > 200).map((f: any) => toD(f[2])).join('');
+  const roads = d.r.filter((f: any) => near(f[3]) && !/^ww_/.test(f[2])).map((f: any) => ({ d: toD(f[3], false), m: /trunk|primary|secondary|tertiary|residential/.test(f[2]) }));
   const bnd = boundary ? d.l.filter((f: any) => f[0] === boundary).map((f: any) => toD(f[3])).join('') : '';
   return <svg className="vis" viewBox={`${-R} ${-R} ${2 * R} ${2 * R}`}>
     <rect x={-R} y={-R} width={2 * R} height={2 * R} fill="#11110f" stroke={C.line} />
-    <path d={water} fill="rgba(91,155,224,.2)" />
+    <path d={water} fill="rgba(91,155,224,.22)" />
+    {roads.map((r: any, i: number) => <path key={i} d={r.d} fill="none" stroke={r.m ? '#6e6a60' : '#3e3c35'} strokeWidth={r.m ? 6 : 2.5} strokeLinecap="round" />)}
     <path d={bld} fill={C.ink} />
     {bnd && <path d={bnd} fill="none" stroke={c} strokeWidth={0.45 * u} pathLength={1} className="dr" style={{ animationDelay: '.6s' }} />}
     <Anns anns={[{ t: 'scale', at: [0, 0], meters: 200 }]} P={() => [-R + 1.5 * u, R - 1.5 * u]} u={u} M={1} />
