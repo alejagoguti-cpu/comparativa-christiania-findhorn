@@ -446,3 +446,11 @@ svg.vis { width: 100%; height: 100%; display: block; }
   .ask.all .askc h4 { font-size: 12px; }
   .ask-grid { grid-template-columns: 1fr; grid-template-rows: repeat(3, 1fr); }
 }
+
+/* vuelo continuo entre mapas */
+.stage5 .scene.out.fly { animation: flyOut 2.8s cubic-bezier(.45, 0, .25, 1) both; transform-origin: var(--ox) var(--oy); pointer-events: none; }
+.stage5 .scene.in.fly { animation: flyIn 2.8s cubic-bezier(.45, 0, .25, 1) both; }
+@keyframes flyOut { 0% { transform: none; opacity: 1; } 50% { opacity: 1; } 85% { opacity: 0; } 100% { transform: scale(var(--fs)); opacity: 0; } }
+@keyframes flyIn { 0% { transform: scale(.35); opacity: 0; } 40% { opacity: 0; } 85% { opacity: 1; } 100% { transform: none; opacity: 1; } }
+
+.scene.out .anns, .scene.out .mapctl, .scene.out .hint, .scene.out .tip { opacity: 0; transition: opacity .5s; }

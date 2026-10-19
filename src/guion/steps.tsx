@@ -22,7 +22,7 @@ export const BLOCKS: Block[] = [
   { n: 'XIII', t: 'Cierre: una hipótesis para el modelamiento', time: '17:30–18:30', part: 'Enfoque 5' },
 ];
 
-export type Step = { b: number; t: string; d?: string; v: () => ReactNode; src?: string; nota?: string };
+export type Step = { b: number; t: string; d?: string; v: () => ReactNode; src?: string; nota?: string; scene?: string; geo?: [number, number, number, number] };
 
 /* ---------- coordenadas y referencias ---------- */
 const CHR_BOX: [number, number, number, number] = [12.5925, 55.6697, 12.6170, 55.6812];
@@ -55,7 +55,7 @@ const chrBoundary = (d = 0.3, c = C.chr): Ann => ({ t: 'feat', kind: 'l', id: CH
 export const STEPS: Step[] = [
   /* ===== I ===== */
   {
-    b: 0, t: 'Dos comunidades, dos maneras de organizar la vida colectiva', d: 'Freetown Christiania (Copenhague, Dinamarca) y Findhorn (Moray, Escocia), a unos 1.010 km de distancia.',
+    b: 0, geo: EU_BOX, t: 'Dos comunidades, dos maneras de organizar la vida colectiva', d: 'Freetown Christiania (Copenhague, Dinamarca) y Findhorn (Moray, Escocia), a unos 1.010 km de distancia.',
     v: () => <GeoMap bbox={EU_BOX} base="sat" dim={0.15} anns={[
       { t: 'arrow', from: CPH, to: FND, c: '#fff', bend: -0.12, d: 1.4, w: 0.8 },
       { t: 'ring', at: CPH, r: 1.6, c: C.chr, pulse: true, d: 0.3 },
@@ -68,7 +68,7 @@ export const STEPS: Step[] = [
     nota: 'Hoy vamos a comparar dos experiencias comunitarias que han buscado organizar la vida colectiva de una manera diferente a los modelos urbanos convencionales: Freetown Christiania, en Copenhague, Dinamarca, y Findhorn, una comunidad ecológica ubicada en Moray, Escocia.',
   },
   {
-    b: 0, t: 'Christiania nace dentro de una ciudad consolidada', d: 'Ocupación de un antiguo recinto militar en Christianshavn, en pleno tejido urbano de Copenhague.',
+    b: 0, geo: CPH_BOX, t: 'Christiania nace dentro de una ciudad consolidada', d: 'Ocupación de un antiguo recinto militar en Christianshavn, en pleno tejido urbano de Copenhague.',
     v: () => <GeoMap site="christiania" bbox={CPH_BOX} base="sat" dim={0.25} anns={[
       chrBoundary(0.3),
       { t: 'tag', at: [12.6095, 55.6762], text: 'Christiania · 34 ha', c: C.chr, dx: 4, dy: -4, d: 1.4 },
@@ -249,7 +249,7 @@ export const STEPS: Step[] = [
 
   /* ===== III ===== */
   {
-    b: 2, t: '2012: la Fundación compra una parte del territorio', d: 'Plano oficial: la subárea I (7,4 ha, fuera del monumento protegido) pasa a la Fundación Freetown Christiania.',
+    b: 2, scene: 'subareas', t: '2012: la Fundación compra una parte del territorio', d: 'Plano oficial: la subárea I (7,4 ha, fuera del monumento protegido) pasa a la Fundación Freetown Christiania.',
     v: () => <Photo img="chr_plano_subareas_2018" mcrop={[250, 20, 1150, 1000]} anns={[
       { t: 'line', pts: [k(460, 88), k(720, 151), k(806, 241), k(955, 262), k(928, 567), k(994, 693), k(1050, 740), k(985, 777), k(961, 719), k(646, 579), k(642, 523), k(430, 338), k(406, 361)], close: true, c: C.chr, w: 0.6, d: 0.3, fill: 'rgba(196,71,43,.18)' },
       { t: 'tag', at: k(700, 380), text: 'Subárea I · comprada\n74.000 m²: suelo y edificios', c: C.chr, dx: 14, dy: 10, d: 1.6 },
@@ -259,7 +259,7 @@ export const STEPS: Step[] = [
     nota: 'La propiedad del suelo es decisiva para entender ambos casos. En Christiania, décadas de conflicto con el Estado llevaron a una solución institucional: en 2012 se formalizó la compra de parte del territorio por medio de la Fundación Freetown Christiania,',
   },
   {
-    b: 2, t: 'El resto se arrienda: la muralla sigue siendo del Estado', d: 'Subáreas II y III sobre el monumento protegido: la Fundación arrienda el suelo y parte de los edificios.',
+    b: 2, scene: 'subareas', t: 'El resto se arrienda: la muralla sigue siendo del Estado', d: 'Subáreas II y III sobre el monumento protegido: la Fundación arrienda el suelo y parte de los edificios.',
     v: () => <Photo img="chr_plano_subareas_2018" anns={[
       { t: 'line', pts: [k(460, 88), k(720, 151), k(806, 241), k(955, 262), k(928, 567), k(994, 693), k(1050, 740), k(985, 777), k(961, 719), k(646, 579), k(642, 523), k(430, 338), k(406, 361)], close: true, c: C.chr, w: 0.35, d: 0, fill: 'rgba(196,71,43,.12)' },
       { t: 'ring', at: k(650, 660), r: 2.6, c: C.ken, d: 0.4 },
@@ -570,14 +570,14 @@ export const STEPS: Step[] = [
 
   /* ===== VIII ===== */
   {
-    b: 7, t: 'Un mecanismo común', d: 'Economía, propiedad y conocimiento forman un ciclo.',
+    b: 7, scene: 'ciclo', t: 'Un mecanismo común', d: 'Economía, propiedad y conocimiento forman un ciclo.',
     v: () => <Cycle center={'ciclo de\ninnovación\nadaptativa'} nodes={[
       { h: 'Necesidad', c: C.chr }, { h: 'Movilizar\nrecursos y\nsaberes', c: C.chr }, { h: 'Práctica\nestable', c: C.fnd }, { h: 'Mantener\no adaptar', c: C.fnd },
     ]} examples={[{ at: 0, text: 'Mover carga sin carro', c: C.chr }, { at: 2, text: 'Christiania Bike · Living Machine', c: C.fnd }]} />,
     nota: 'Si relacionamos economía, propiedad y conocimiento, aparece un mecanismo común. Primero, la comunidad identifica una necesidad. Después, moviliza recursos y conocimientos para responder a ella. Si la solución funciona, puede convertirse en una práctica estable, un servicio o una actividad económica. Finalmente, los recursos y aprendizajes acumulados permiten mantenerla o adaptarla.',
   },
   {
-    b: 7, t: 'El ciclo también puede romperse', d: '',
+    b: 7, scene: 'ciclo', t: 'El ciclo también puede romperse', d: '',
     v: () => <Cycle center={'ciclo\ninterrumpido'} nodes={[
       { h: 'Necesidad', c: C.chr }, { h: 'Movilizar\nrecursos y\nsaberes', c: C.chr }, { h: 'Práctica\nestable', c: C.fnd }, { h: 'Mantener\no adaptar', c: C.fnd },
     ]} breaks={[{ at: 0, text: 'Pérdida de personal' }, { at: 1, text: 'Aumentan los costos' }, { at: 2, text: 'Disminuyen los ingresos' }, { at: 3, text: 'Decisiones concentradas' }]} />,
@@ -693,22 +693,22 @@ export const STEPS: Step[] = [
     nota: 'El segundo ejemplo es el parque eólico de Findhorn. La generación renovable permite producir electricidad a partir del viento y, en determinadas condiciones, exportar excedentes a la red.',
   },
   {
-    b: 9, t: 'Potencia instalada (kW)', d: 'La capacidad nominal de generación: no dice cuánto se produce.',
+    b: 9, scene: 'energia', t: 'Potencia instalada (kW)', d: 'La capacidad nominal de generación: no dice cuánto se produce.',
     v: () => <Energy phase={0} />,
     nota: 'Aquí debemos distinguir cuatro conceptos. La potencia instalada, medida en kilovatios, indica la capacidad nominal de generación.',
   },
   {
-    b: 9, t: 'Energía producida (kWh)', d: 'Cuánto se genera durante un periodo: depende del viento.',
+    b: 9, scene: 'energia', t: 'Energía producida (kWh)', d: 'Cuánto se genera durante un periodo: depende del viento.',
     v: () => <Energy phase={1} />,
     nota: 'La energía producida, medida en kilovatios-hora, expresa cuánto se genera durante un periodo.',
   },
   {
-    b: 9, t: 'Demanda', d: 'La electricidad que necesita la comunidad, que varía durante el día.',
+    b: 9, scene: 'energia', t: 'Demanda', d: 'La electricidad que necesita la comunidad, que varía durante el día.',
     v: () => <Energy phase={2} />,
     nota: 'La demanda representa la electricidad que necesita la comunidad y puede variar a lo largo del día.',
   },
   {
-    b: 9, t: 'Cobertura: ¿qué parte de la demanda se satisface?', d: 'Un balance anual favorable no demuestra autonomía permanente: la red cubre las diferencias.',
+    b: 9, scene: 'energia', t: 'Cobertura: ¿qué parte de la demanda se satisface?', d: 'Un balance anual favorable no demuestra autonomía permanente: la red cubre las diferencias.',
     v: () => <Energy phase={3} />,
     nota: 'Por último, la cobertura indica qué proporción de esa demanda se satisface con la generación disponible. Por eso, un balance anual de generación favorable no demuestra autonomía permanente. Puede haber momentos en que el parque genere más electricidad de la que se necesita y otros en los que el viento sea insuficiente. La red externa permite gestionar esa diferencia. Este caso demuestra que la sostenibilidad depende tanto de las tecnologías locales como de la forma en que se conectan con sistemas de mayor escala.',
   },
@@ -889,12 +889,12 @@ export const STEPS: Step[] = [
     nota: 'Para cerrar, Christiania y Findhorn muestran que la continuidad comunitaria depende de la relación entre economía, conocimiento e infraestructura.',
   },
   {
-    b: 12, t: 'Hipótesis: un ciclo de refuerzo…', d: 'Recursos, conocimiento y mantenimiento aumentan la capacidad de adaptación.',
+    b: 12, scene: 'cld', t: 'Hipótesis: un ciclo de refuerzo…', d: 'Recursos, conocimiento y mantenimiento aumentan la capacidad de adaptación.',
     v: () => <CLD step={0} />,
     nota: 'Podemos formular una hipótesis para nuestro trabajo de modelamiento dinámico: cuando una comunidad fortalece sus recursos compartidos, transmite conocimientos y mantiene sus infraestructuras, puede aumentar su capacidad de adaptación;',
   },
   {
-    b: 12, t: '…y sus frenos', d: 'Costos, dependencias externas y concentración de decisiones la debilitan.',
+    b: 12, scene: 'cld', t: '…y sus frenos', d: 'Costos, dependencias externas y concentración de decisiones la debilitan.',
     v: () => <CLD step={1} />,
     nota: 'pero si crecen sus costos, sus dependencias externas o la concentración de decisiones, esa capacidad puede debilitarse.',
   },

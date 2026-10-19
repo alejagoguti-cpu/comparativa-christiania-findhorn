@@ -375,7 +375,7 @@ function GeoMapInner({ site, bbox, base = 'sat', plan = false, anns = [], dim = 
           {layers.roads.filter((f: any) => f[1]).map((f: any, i: number) => <path key={"hr" + i} className="feat-hit" d={toD(f[3], false)} fill="none" stroke="#000" strokeOpacity={0} style={{ pointerEvents: "stroke" }} strokeWidth={0.9 * u} onPointerMove={hover(f[1], (RT[f[2]] ?? f[2]) + ' · OSM')} onPointerLeave={() => setTip(null)} />)}
           {show.calles && layers.labels.map((l: any, i: number) => <text key={'lb' + i} x={l.x} y={l.y} transform={`rotate(${l.ang} ${l.x} ${l.y})`} textAnchor="middle" dy={0.28 * u} fontSize={0.62 * u / Math.sqrt(view.k)} fontFamily="JetBrains Mono, monospace" fontWeight={600} fill={onSat ? '#f3efe6' : '#bdb7aa'} paintOrder="stroke" stroke="rgba(0,0,0,.85)" strokeWidth={0.2 * u} style={{ pointerEvents: 'none' }}>{l.n}</text>)}
         </g>}
-        {show.anot && <g style={{ pointerEvents: "none" }}><Anns anns={anns} P={P} u={u / Math.pow(view.k, 0.75)} data={data} M={1 / metersPerPx} vb={[0, 0, vw, vh]} /></g>}
+        {show.anot && <g className="anns" style={{ pointerEvents: "none" }}><Anns anns={anns} P={P} u={u / Math.pow(view.k, 0.75)} data={data} M={1 / metersPerPx} vb={[0, 0, vw, vh]} /></g>}
         {cur !== null && (() => { const [qx, qy] = P(st[cur].at); return <circle key={cur} cx={qx} cy={qy} r={2.4 * u / view.k * 1.3} fill="none" stroke={C.hl} strokeWidth={0.32 * u / view.k * 1.3} className="pulse" style={{ pointerEvents: 'none' }} />; })()}
       </g>
     </svg>
