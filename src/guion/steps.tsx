@@ -495,6 +495,17 @@ export const STEPS: Step[] = [
     nota: 'La comparación revela dos mecanismos complementarios. Christiania destaca el aprendizaje práctico ligado a los talleres y a las necesidades cotidianas; Findhorn, la sistematización y difusión educativa de sus experiencias.',
   },
   {
+    b: 6, t: 'Lo que dice la literatura: la resiliencia se aprende', d: 'Marco de un estudio comparativo reciente sobre Findhorn: transmitir conocimiento sostiene la capacidad de adaptarse.',
+    v: () => <Photo img="paper_es_fig6" anns={[
+      { t: 'box', a: [0.0, 0.29], b: [0.30, 0.39], c: C.fnd, d: 0.3 }, { t: 'tag', at: [0.15, 0.29], text: 'Adaptabilidad · transmisión de conocimiento', c: C.fnd, dy: -3, d: 0.5 },
+      { t: 'box', a: [0.41, 0.89], b: [0.63, 0.99], c: C.chr, d: 0.7 }, { t: 'tag', at: [0.52, 0.89], text: 'Capital social · cohesión', c: C.chr, dy: -3, d: 0.9 },
+      { t: 'box', a: [0.05, 0.73], b: [0.33, 0.84], c: C.ken, d: 1.1 }, { t: 'tag', at: [0.19, 0.73], text: 'Transformabilidad · agencia', c: C.ken, dy: -3, d: 1.3 },
+      { t: 'box', a: [0.78, 0.49], b: [0.99, 0.60], c: C.hl, d: 1.5 }, { t: 'tag', at: [0.885, 0.49], text: 'Conectividad · sentido', c: C.hl, dy: -3, d: 1.7 },
+    ]} />,
+    src: 'Fernandez, J., Baumber, A., Salignac, F. y Kaya, E. (2026). Narrative plasticity and the dynamics of community resilience in ecovillages. Ecology and Society 31(3):19. doi:10.5751/ES-17608-310319. Figura 6, CC BY 4.0.',
+    nota: '(Apoyo bibliográfico: el conocimiento compartido y la capacidad de adaptación como factores de resiliencia en Findhorn.)',
+  },
+  {
     b: 6, t: 'Difundir una idea no demuestra que funcione en cualquier lugar', d: 'Cada técnica viaja con requisitos.',
     v: () => <Flow items={[
       { h: 'Idea o técnica', p: 'Lo que se enseña o se difunde.', c: C.ink },
@@ -530,6 +541,16 @@ export const STEPS: Step[] = [
       { k: '+', h: 'Capacidad de aprender', p: 'Cuando cambian las condiciones.', c: C.fnd },
     ]} />,
     nota: 'Christiania y Findhorn muestran que la innovación adaptativa no consiste solamente en crear tecnologías nuevas. También implica construir reglas, distribuir responsabilidades y conservar la capacidad de aprender cuando cambian las condiciones.',
+  },
+
+  {
+    b: 7, t: 'Findhorn en datos: qué sostiene la resiliencia', d: 'Porcentaje de residentes entrevistados que mencionan cada factor (naranja: Findhorn).',
+    v: () => <Photo img="paper_es_fig4" anns={[
+      { t: 'box', a: [0.54, 0.27], b: [0.582, 0.865], c: C.hl, d: 0.4 }, { t: 'tag', at: [0.561, 0.27], text: 'Adaptabilidad · 80 %', c: C.hl, dy: -3, d: 0.6 },
+      { t: 'box', a: [0.919, 0.18], b: [0.961, 0.865], c: C.hl, d: 0.8 }, { t: 'tag', at: [0.94, 0.18], text: 'Capital social · 93 %', c: C.hl, dy: -3, dx: -2, d: 1 },
+    ]} />,
+    src: 'Fernandez et al. (2026), Ecology and Society 31(3):19, figura 4, CC BY 4.0.',
+    nota: '(Dato de apoyo: en Findhorn, la adaptabilidad y el capital social son los factores más mencionados.)',
   },
 
   /* ===== IX ===== */
@@ -589,14 +610,15 @@ export const STEPS: Step[] = [
   },
   {
     b: 9, t: 'Cómo funciona: un tren de tratamiento biológico', d: 'Su interés: tratar parte de las aguas residuales dentro del propio territorio.',
-    v: () => <Flow items={[
-      { h: 'Tanque séptico', p: 'Sedimentación y digestión sin oxígeno.', c: C.ink },
-      { h: 'Reactores aerobios cerrados', p: 'Aireación y bacterias.', c: C.ken },
-      { h: 'Tanques abiertos con plantas', p: 'Raíces, algas, caracoles y microorganismos.', c: C.fnd },
-      { h: 'Lechos de pulido', p: 'Superficie para retener nutrientes.', c: C.fnd },
-      { h: 'Vertido controlado', p: 'Con monitoreo de la autoridad ambiental (SEPA).', c: C.ink },
+    v: () => <Photo img="fnd_lm_esquema_epa" anns={[
+      { t: 'box', a: [0.07, 0.33], b: [0.21, 0.72], c: C.ink, d: 0.4 }, { t: 'tag', at: [0.14, 0.33], text: '1 · Reactor anaerobio\nsedimenta y digiere sin oxígeno', c: C.ink, dy: -3, d: 0.6 },
+      { t: 'box', a: [0.25, 0.12], b: [0.32, 0.58], c: C.ken, d: 0.8 }, { t: 'tag', at: [0.285, 0.58], text: '2 · Reactor anóxico', c: C.ken, dy: 4, d: 1 },
+      { t: 'box', a: [0.32, 0.12], b: [0.41, 0.58], c: C.ken, d: 1.2 }, { t: 'tag', at: [0.365, 0.12], text: '3 · Aerobio cerrado', c: C.ken, dy: -3, d: 1.4 },
+      { t: 'box', a: [0.42, 0.05], b: [0.69, 0.58], c: C.fnd, d: 1.6 }, { t: 'tag', at: [0.555, 0.58], text: '4 · Tanques abiertos con plantas', c: C.fnd, dy: 4, d: 1.8 },
+      { t: 'box', a: [0.70, 0.18], b: [0.77, 0.66], c: C.hl, d: 2 }, { t: 'tag', at: [0.735, 0.66], text: '5 · Clarificador', c: C.hl, dy: 4, d: 2.2 },
+      { t: 'box', a: [0.78, 0.05], b: [0.86, 0.58], c: C.fnd, d: 2.4 }, { t: 'tag', at: [0.82, 0.05], text: '6 · Lecho ecológico fluidizado', c: C.fnd, dy: -2, dx: 2, d: 2.6 },
     ]} />,
-    src: 'Todd y Josephson (1996), Ecological Engineering 6; Global Ecovillage Network, “The Living Machine”; The Ecologist (2010).',
+    src: 'US EPA (2002), Wastewater Technology Fact Sheet: The Living Machine, EPA 832-F-02-025, fig. 1 (fuente: Living Machines Inc., 2001); Todd y Josephson (1996), Ecological Engineering 6.',
     nota: 'Su interés consiste en integrar el tratamiento de residuos líquidos dentro del propio territorio, reduciendo la dependencia de soluciones convencionales para una parte del proceso.',
   },
   {
@@ -767,6 +789,29 @@ export const STEPS: Step[] = [
       { img: 'ken_lavaca', cap: <><b>Humedal La Vaca.</b> Juan Carlos Sáenz Rodríguez, CC BY-SA 4.0.</> },
     ]} />,
     nota: 'Otra posibilidad sería estudiar sistemas de filtración biológica para contribuir al mejoramiento de la calidad del agua en los humedales La Vaca y El Burro. No se trata de trasladar directamente la Living Machine, sino de evaluar si ciertos principios de tratamiento biológico podrían adaptarse a las condiciones hidráulicas, ecológicas y sanitarias locales.',
+  },
+  {
+    b: 11, t: 'Un principio a evaluar: el humedal de flujo subsuperficial', d: 'El agua pasa bajo la superficie, a través de grava y raíces, donde las bacterias la depuran.',
+    v: () => <Photo img="ken_humedal_ssf_epa" crop={[0, 0, 1070, 800]} frac={false} anns={[
+      { t: 'box', a: [200, 60], b: [900, 290], c: C.fnd, d: 0.3 }, { t: 'tag', at: [550, 60], text: 'Vegetación: raíces que oxigenan', c: C.fnd, dy: 3, d: 0.5 },
+      { t: 'box', a: [205, 325], b: [865, 410], c: C.ken, d: 0.7 }, { t: 'tag', at: [535, 410], text: 'Zona de tratamiento: grava', c: C.ken, dy: 4, d: 0.9 },
+      { t: 'ring', at: [212, 397], c: C.hl, d: 1.1 }, { t: 'tag', at: [212, 397], text: 'Entrada', c: C.hl, dx: -3, dy: 6, d: 1.3 },
+      { t: 'ring', at: [860, 397], c: C.hl, d: 1.5 }, { t: 'tag', at: [860, 397], text: 'Salida', c: C.hl, dx: 3, dy: 6, d: 1.7 },
+      { t: 'box', a: [205, 405], b: [865, 440], c: C.chr, d: 1.9 }, { t: 'tag', at: [370, 440], text: 'Membrana o suelo impermeable', c: C.chr, dy: 8, d: 2.1 },
+    ]} />,
+    src: 'US EPA (2000). Wastewater Technology Fact Sheet: Wetlands: Subsurface Flow. EPA 832-F-00-023, fig. 1 (adaptado de S. C. Reed). Documento del Gobierno de EE. UU., dominio público.',
+    nota: '(Ejemplo de principio de tratamiento biológico que habría que evaluar para La Vaca y El Burro.)',
+  },
+  {
+    b: 11, t: 'El Burro hoy: lo que dice su plan de manejo', d: 'En unos 70 años el humedal perdió cerca del 89 % de su área: de 71,5 ha a 18,8 ha de área legal.',
+    v: () => <Chk n={4} items={[
+      { k: 'FRAGMENTACIÓN', h: 'Dividido en dos sectores', p: 'La avenida Ciudad de Cali lo parte en dos.', c: C.chr },
+      { k: 'AGUA', h: 'Agua de entrada deficiente', p: 'La calidad del agua que ingresa es baja.', c: C.ken },
+      { k: 'SUELO', h: 'Pérdida de área inundable', p: 'Se reduce la ronda hidráulica y el área legal.', c: C.hl },
+      { k: 'RESIDUOS', h: 'Residuos sólidos en el humedal', p: 'Disposición inadecuada en sus bordes.', c: C.mute },
+    ]} />,
+    src: 'Secretaría Distrital de Ambiente, Plan de Manejo Ambiental Humedal El Burro (diagnóstico); Universidad Nacional, reportado por El Espectador.',
+    nota: '(Contexto de Kennedy: problemas documentados del humedal El Burro.)',
   },
   {
     b: 11, t: 'Antes de intervenir', d: 'Cualquier intervención requiere estudios y coordinación institucional.',

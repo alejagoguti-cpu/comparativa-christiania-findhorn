@@ -64,6 +64,10 @@ export const IMG: Record<string, [string, number, number, string]> = {
   ken_corabastos: ['ken_corabastos.jpg', 1600, 1200, 'Felipe Restrepo Acosta, CC BY-SA 4.0'],
   ken_elburro: ['ken_elburro.jpg', 1600, 1067, 'Juan Carlos Sáenz Rodríguez, CC BY-SA 4.0'],
   ken_lavaca: ['ken_lavaca.jpg', 1600, 1067, 'Juan Carlos Sáenz Rodríguez, CC BY-SA 4.0'],
+  fnd_lm_esquema_epa: ['fnd_lm_esquema_epa.png', 2440, 630, 'US EPA (2002), fig. 1 (fuente: Living Machines Inc., 2001)'],
+  ken_humedal_ssf_epa: ['ken_humedal_ssf_epa.png', 1070, 940, 'US EPA (2000), fig. 1 (adaptado de S. C. Reed)'],
+  paper_es_fig6: ['paper_es_fig6.jpg', 2000, 1520, 'Fernandez et al. (2026), fig. 6, CC BY 4.0'],
+  paper_es_fig4: ['paper_es_fig4.jpg', 1964, 1040, 'Fernandez et al. (2026), fig. 4, CC BY 4.0'],
 };
 
 /* ---------- anotaciones ---------- */
