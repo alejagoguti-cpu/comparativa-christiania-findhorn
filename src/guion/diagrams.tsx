@@ -114,7 +114,7 @@ export function Cycle({ nodes, center, breaks = [], examples }: { nodes: { h: st
   const fs = mobile ? 30 : 27;
   const cur = useStops(nodes.map((x) => x.h.replace(/\n/g, ' ')));
   const cam = cur === null ? 'none' : `translate(${W / 2 - pos[cur][0] * 1.6}px, ${H / 2 - pos[cur][1] * 1.6}px) scale(1.6)`;
-  return <svg className="vis" viewBox={`0 0 ${W} ${H}`} style={{ overflow: 'hidden' }}><g style={{ transform: cam, transformOrigin: '0 0', transition: 'transform 1.1s cubic-bezier(.4,0,.2,1)' }}>
+  return <svg className="vis" viewBox={`0 0 ${W} ${H}`} style={{ overflow: 'hidden' }}><g style={{ transform: cam, transformOrigin: '0 0', transition: 'transform 1.9s cubic-bezier(.33,0,.2,1)' }}>
     <defs><marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill={C.ink} /></marker></defs>
     {pos.map((p, i) => {
       const a0 = -Math.PI / 2 + (i / n) * Math.PI * 2 + 0.33, a1 = -Math.PI / 2 + ((i + 1) / n) * Math.PI * 2 - 0.33;
@@ -152,7 +152,7 @@ export function Net({ center, nodes, links = [] }: { center: { h: string; c: str
   const pos = nodes.map((_, i) => { const a = -Math.PI / 2 + (i / nodes.length) * Math.PI * 2; return [cx + rx * Math.cos(a), cy + ry * Math.sin(a)]; });
   const cur = useStops(nodes.map((x) => x.h));
   const cam = cur === null ? 'none' : `translate(${W / 2 - pos[cur][0] * 1.7}px, ${H / 2 - pos[cur][1] * 1.7}px) scale(1.7)`;
-  return <svg className="vis" viewBox={`0 0 ${W} ${H}`} style={{ overflow: 'hidden' }}><g style={{ transform: cam, transformOrigin: '0 0', transition: 'transform 1.1s cubic-bezier(.4,0,.2,1)' }}>
+  return <svg className="vis" viewBox={`0 0 ${W} ${H}`} style={{ overflow: 'hidden' }}><g style={{ transform: cam, transformOrigin: '0 0', transition: 'transform 1.9s cubic-bezier(.33,0,.2,1)' }}>
     {pos.map((p, i) => <line key={'l' + i} x1={cx} y1={cy} x2={p[0]} y2={p[1]} stroke={C.line} strokeWidth={2} pathLength={1} className="dr" style={D(i, 0.3, 0.25)} />)}
     {links.map(([a, b, t], i) => <g key={'k' + i} className="po" style={D(i, 2.4, 0.5)}>
       <line x1={pos[a][0]} y1={pos[a][1]} x2={pos[b][0]} y2={pos[b][1]} stroke={C.chr} strokeWidth={3} strokeDasharray="8 7" />

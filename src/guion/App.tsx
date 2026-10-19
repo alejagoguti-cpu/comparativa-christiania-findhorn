@@ -39,7 +39,7 @@ export default function App() {
     setStopsState([]); setSub(0); setI(k);
     setLayers((ls) => [...ls.filter((l) => l.st === 'in').map((l) => ({ ...l, st: 'out' as const, dir })), { i: k, st: 'in', dir, id: uid++, ox: lastPt.current[0], oy: lastPt.current[1] }]);
     lastPt.current = [50, 50];
-    setTimeout(() => setLayers((ls) => ls.filter((l) => l.st === 'in')), 900);
+    setTimeout(() => setLayers((ls) => ls.filter((l) => l.st === 'in')), 2000);
     history.replaceState(null, '', '#' + (k + 1));
   }, []);
   // un clic: si quedan paradas, acerca la cámara a la siguiente; si no, pasa al siguiente paso con zoom

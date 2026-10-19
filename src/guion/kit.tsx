@@ -238,7 +238,7 @@ export function Photo({ img, anns = [], crop, mcrop, frac = true, auto = true }:
   void touched; void auto;
   return <div className="fill">
     <svg className="vis" viewBox={vb.join(' ')} preserveAspectRatio="xMidYMid meet" style={{ overflow: 'hidden' }}>
-      <g transform={`translate(${z.x} ${z.y}) scale(${z.k})`} style={{ transition: `transform ${z.slow ? 2.4 : 0.6}s cubic-bezier(.4,0,.2,1)` }}>
+      <g transform={`translate(${z.x} ${z.y}) scale(${z.k})`} style={{ transition: `transform ${z.slow ? 2.8 : 0.8}s cubic-bezier(.33,0,.2,1)` }}>
         <image href={`guion/img/${f}`} x={0} y={0} width={w} height={h} preserveAspectRatio="none" />
         <Anns anns={anns} P={P} u={u / Math.pow(z.k, 0.75)} vb={vb} />
         {cur !== null && (() => { const [qx, qy] = P(st[cur].at); return <g key={cur}><circle cx={qx} cy={qy} r={2.6 * u / z.k * 1.4} fill="none" stroke={C.hl} strokeWidth={0.35 * u / z.k * 1.4} className="pulse" /></g>; })()}
@@ -358,7 +358,7 @@ function GeoMapInner({ site, bbox, base = 'sat', plan = false, anns = [], dim = 
     onPointerUp={() => { if (drag.current?.moved) (window as any).__noClick = performance.now(); drag.current = null; }} onPointerLeave={() => { drag.current = null; setTip(null); }}
     onDoubleClick={() => setView({ k: 1, x: 0, y: 0 })}>
     <svg className="vis" viewBox={`0 0 ${vw} ${vh}`} preserveAspectRatio="xMidYMid meet" style={{ overflow: 'hidden', cursor: drag.current ? 'grabbing' : 'grab' }}>
-      <g transform={`translate(${view.x} ${view.y}) scale(${view.k})`} style={{ transition: drag.current ? 'none' : slow ? 'transform 2.4s cubic-bezier(.4,0,.2,1)' : 'transform .25s ease' }}>
+      <g transform={`translate(${view.x} ${view.y}) scale(${view.k})`} style={{ transition: drag.current ? 'none' : slow ? 'transform 2.8s cubic-bezier(.33,0,.2,1)' : 'transform .25s ease' }}>
         <rect x={0} y={0} width={vw} height={vh} fill="#11110f" />
         {tiles.map(([x, y]) => <image key={x + '_' + y} href={TL.replace('{z}', String(z)).replace('{x}', String(x)).replace('{y}', String(y))} x={x * 256 - ox} y={y * 256 - oy} width={256.6} height={256.6} />)}
         {dim > 0 && <rect x={0} y={0} width={vw} height={vh} fill="#000" opacity={dim} />}
