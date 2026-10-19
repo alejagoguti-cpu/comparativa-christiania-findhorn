@@ -4,53 +4,60 @@ import { C, useStage } from './kit';
 
 const D = (i: number, base = 0.15, step = 0.28) => ({ animationDelay: `${base + i * step}s` });
 
-/* ---------- HTML ---------- */
+/* ---------- HTML interactivo ---------- */
+const Arr = () => <svg viewBox="0 0 20 20"><path d="M3 10h13M11 5l5 5-5 5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>;
+function useSel() { const [s, set] = useState<number | null>(null); return [s, (i: number) => set((v) => (v === i ? null : i))] as const; }
+
 export function Flow({ title, items }: { title?: string; items: { h: string; p?: string; c?: string }[] }) {
+  const [sel, tog] = useSel();
   return <div className="dg">
     {title && <h3 className="po">{title}</h3>}
     <div className="flow">
-      {items.map((it, i) => <FlowItem key={i} i={i} it={it} last={i === items.length - 1} />)}
+      {items.map((it, i) => <FlowItem key={i} i={i} it={it} last={i === items.length - 1} sel={sel === i} on={() => tog(i)} />)}
     </div>
   </div>;
 }
-function FlowItem({ it, i, last }: any) {
+function FlowItem({ it, i, last, sel, on }: any) {
   return <>
-    <div className="it po" style={{ ...D(i, 0.15, 0.45), ['--c' as any]: it.c ?? C.ink }}><h4>{it.h}</h4>{it.p && <p>{it.p}</p>}</div>
-    {!last && <div className="ar po" style={D(i, 0.4, 0.45)}>→</div>}
+    <div className={'card po' + (sel ? ' sel' : '')} onClick={on} style={{ ...D(i, 0.1, 0.35), ['--c' as any]: it.c ?? C.mute }}><span className="k">{String(i + 1).padStart(2, '0')}</span><h4>{it.h}</h4>{it.p && <p>{it.p}</p>}</div>
+    {!last && <div className="ar po" style={D(i, 0.3, 0.35)}><Arr /></div>}
   </>;
 }
 
 export function Cols({ cols }: { cols: { h: string; c?: string; rows: [string, string][] }[] }) {
   return <div className="dg"><div className="cols" style={{ ['--n' as any]: cols.length }}>
-    {cols.map((c, i) => <div key={i} className="col po" style={{ ...D(i, 0.1, 0.3), ['--c' as any]: c.c ?? C.ink }}>
+    {cols.map((c, i) => <div key={i} className="col po" style={{ ...D(i, 0.1, 0.25), ['--c' as any]: c.c ?? C.mute }}>
       <h4>{c.h}</h4>
-      {c.rows.map((r, k) => <div className="row po" key={k} style={D(k, 0.5 + i * 0.15, 0.4)}><span>{r[0]}</span><span>{r[1]}</span></div>)}
+      {c.rows.map((r, k) => <div className="row po" key={k} style={D(k, 0.4 + i * 0.12, 0.3)}><span>{r[0]}</span><span>{r[1]}</span></div>)}
     </div>)}
   </div></div>;
 }
 
 export function Timeline({ events, phases, title }: { title?: string; events: { y: string; h: string; p?: string; c?: string }[]; phases?: { t: string; c: string; span: number }[] }) {
+  const [sel, tog] = useSel();
+  const pct = sel === null ? 100 : ((sel + 0.5) / events.length) * 100;
   return <div className="dg">
     {title && <h3 className="po">{title}</h3>}
     <div className="tl" style={{ ['--n' as any]: events.length }}>
       {phases && <div className="ph" style={{ ['--ph' as any]: phases.map((p) => p.span + 'fr').join(' ') }}>
-        {phases.map((p, i) => <span key={i} className="po" style={{ ...D(i, 0.1, 0.25), ['--c' as any]: p.c }}>{p.t}</span>)}
+        {phases.map((p, i) => <span key={i} className="po" style={{ ...D(i, 0.1, 0.2), ['--c' as any]: p.c }}>{p.t}</span>)}
       </div>}
-      <div className="axis" style={{ top: phases ? 94 : 64 }} />
+      <div className="axis"><b style={{ width: pct + '%' }} /></div>
       <div className="evs">
-        {events.map((e, i) => <div key={i} className="ev po" style={{ ...D(i, 0.35, 0.5), ['--c' as any]: e.c ?? C.ink }}>
-          <span className="y">{e.y}</span><h4>{e.h}</h4>{e.p && <p>{e.p}</p>}
-        </div>)}
+        {events.map((e, i) => <button key={i} className={'ev po' + (sel === i ? ' sel' : '')} onClick={() => tog(i)} style={{ ...D(i, 0.3, 0.35), ['--c' as any]: e.c ?? C.ink, opacity: sel !== null && sel !== i ? 0.4 : undefined }}>
+          <span className="dot" /><span className="y">{e.y}</span><h4>{e.h}</h4>{e.p && <p>{e.p}</p>}
+        </button>)}
       </div>
     </div>
   </div>;
 }
 
 export function Chk({ title, items, n }: { title?: string; n?: number; items: { k?: string; h: string; p?: string; c?: string }[] }) {
+  const [sel, tog] = useSel();
   return <div className="dg">
     {title && <h3 className="po">{title}</h3>}
-    <div className="chk" style={{ ['--n' as any]: n ?? items.length }}>
-      {items.map((it, i) => <div key={i} className="po" style={{ ...D(i, 0.15, 0.45), ['--c' as any]: it.c }}>{it.k && <i>{it.k}</i>}<b>{it.h}</b>{it.p && <span>{it.p}</span>}</div>)}
+    <div className="grid" style={{ ['--n' as any]: n ?? items.length }}>
+      {items.map((it, i) => <div key={i} className={'card po' + (sel === i ? ' sel' : '')} onClick={() => tog(i)} style={{ ...D(i, 0.1, 0.25), ['--c' as any]: it.c ?? C.mute }}>{it.k && <span className="k">{it.k}</span>}<h4>{it.h}</h4>{it.p && <p>{it.p}</p>}</div>)}
     </div>
   </div>;
 }
@@ -60,22 +67,23 @@ export function Big({ children, sub }: { children: ReactNode; sub?: ReactNode })
 }
 
 export function Qs({ items, title }: { title?: string; items: { k: string; q: string }[] }) {
+  const [sel, tog] = useSel();
   return <div className="dg">{title && <h3 className="po">{title}</h3>}<div className="qs">
-    {items.map((it, i) => <div key={i} className="po" style={D(i, 0.2, 0.55)}><small>{it.k}</small>{it.q}</div>)}
+    {items.map((it, i) => <div key={i} className={'card po' + (sel === i ? ' sel' : '')} onClick={() => tog(i)} style={{ ...D(i, 0.15, 0.4), ['--c' as any]: [C.chr, C.fnd, C.ken][i % 3] }}><span className="k">{it.k}</span><h4>{it.q}</h4></div>)}
   </div></div>;
 }
 
 /* ---------- SVG con proporción según dispositivo ---------- */
 function useVB(wide: [number, number], tall: [number, number]) {
-  const { mobile } = useStage();
+  const { tall: mobile } = useStage();
   return mobile ? tall : wide;
 }
-const T = (x: number, y: number, s: string, o: any = {}) => <text x={x} y={y} textAnchor={o.a ?? 'middle'} fontSize={o.fs ?? 26} fontWeight={o.fw ?? 500} fill={o.c ?? C.ink} fontFamily={o.serif ? 'Newsreader, Georgia, serif' : 'Inter Tight, Arial, sans-serif'} fontStyle={o.it ? 'italic' : 'normal'}>{s}</text>;
+const T = (x: number, y: number, s: string, o: any = {}) => <text x={x} y={y} textAnchor={o.a ?? 'middle'} fontSize={o.fs ?? 26} fontWeight={o.fw ?? 500} fill={o.c ?? C.ink} fontFamily="Inter Tight, Arial, sans-serif" fontStyle="normal">{s}</text>;
 const ML = (x: number, y: number, s: string, o: any = {}) => s.split('\n').map((l, i) => <g key={i}>{T(x, y + i * (o.fs ?? 26) * 1.2, l, o)}</g>);
 
 /** Ciclo: nodos en círculo con flechas; rupturas opcionales. */
 export function Cycle({ nodes, center, breaks = [], examples }: { nodes: { h: string; c?: string }[]; center?: string; breaks?: { at: number; text: string }[]; examples?: { at: number; text: string; c: string }[] }) {
-  const { mobile } = useStage();
+  const { tall: mobile } = useStage();
   const [W, H] = mobile ? [800, 900] : [1600, 900];
   const cx = W / 2, cy = H / 2 + (mobile ? 10 : 0), R = mobile ? 285 : 300;
   const n = nodes.length;
@@ -90,7 +98,7 @@ export function Cycle({ nodes, center, breaks = [], examples }: { nodes: { h: st
     })}
     {center && <g className="po" style={D(n, 0.6, 0.55)}>{ML(cx, cy - 8, center, { serif: true, it: true, fs: mobile ? 36 : 34, c: C.mute })}</g>}
     {pos.map((p, i) => <g key={i} className="po" style={D(i, 0.3, 0.55)}>
-      <circle cx={p[0]} cy={p[1]} r={mobile ? 92 : 86} fill="#fffdf7" stroke={nodes[i].c ?? C.ink} strokeWidth={3} />
+      <circle cx={p[0]} cy={p[1]} r={mobile ? 92 : 86} fill="#1a1a17" stroke={nodes[i].c ?? C.ink} strokeWidth={3} />
       {ML(p[0], p[1] - (nodes[i].h.split('\n').length - 1) * fs * 0.6 + fs * 0.35, nodes[i].h, { fs, fw: 600 })}
     </g>)}
     {breaks.map((b, i) => {
@@ -112,7 +120,7 @@ export function Cycle({ nodes, center, breaks = [], examples }: { nodes: { h: st
 
 /** Red de actores (radial). */
 export function Net({ center, nodes, links = [] }: { center: { h: string; c: string }; nodes: { h: string; p?: string; c: string }[]; links?: [number, number, string?][] }) {
-  const { mobile } = useStage();
+  const { tall: mobile } = useStage();
   const [W, H] = mobile ? [800, 1000] : [1600, 900];
   const cx = W / 2, cy = H / 2, rx = mobile ? 280 : 560, ry = mobile ? 390 : 330;
   const pos = nodes.map((_, i) => { const a = -Math.PI / 2 + (i / nodes.length) * Math.PI * 2; return [cx + rx * Math.cos(a), cy + ry * Math.sin(a)]; });
@@ -124,7 +132,7 @@ export function Net({ center, nodes, links = [] }: { center: { h: string; c: str
     </g>)}
     <g className="po"><circle cx={cx} cy={cy} r={mobile ? 105 : 95} fill={center.c} />{ML(cx, cy - 6, center.h, { fs: mobile ? 26 : 24, c: '#fff', fw: 600 })}</g>
     {pos.map((p, i) => <g key={i} className="po" style={D(i, 0.5, 0.3)}>
-      <rect x={p[0] - (mobile ? 170 : 185)} y={p[1] - 46} width={mobile ? 340 : 370} height={nodes[i].p ? 96 : 66} rx={6} fill="#fffdf7" stroke={nodes[i].c} strokeWidth={2.5} />
+      <rect x={p[0] - (mobile ? 170 : 185)} y={p[1] - 46} width={mobile ? 340 : 370} height={nodes[i].p ? 96 : 66} rx={6} fill="#1a1a17" stroke={nodes[i].c} strokeWidth={2.5} />
       <rect x={p[0] - (mobile ? 170 : 185)} y={p[1] - 46} width={8} height={nodes[i].p ? 96 : 66} fill={nodes[i].c} />
       {T(p[0], p[1] - 10, nodes[i].h, { fs: mobile ? 23 : 22, fw: 600 })}
       {nodes[i].p && ML(p[0], p[1] + 20, nodes[i].p!, { fs: mobile ? 17 : 17, c: C.mute, fw: 400 })}
@@ -134,7 +142,8 @@ export function Net({ center, nodes, links = [] }: { center: { h: string; c: str
 
 /** Sankey cualitativo: fuentes -> nodo -> destinos (horizontal o vertical en celular). */
 export function Sankey({ sources, mid, targets, note, leak }: { sources: { h: string; v: number; c?: string }[]; mid: { h: string; c: string }; targets: { h: string; v: number; c?: string }[]; note?: string; leak?: { h: string; v: number } }) {
-  const { mobile } = useStage();
+  const { tall: mobile } = useStage();
+  const [hv, setHv] = useState<string | null>(null);
   const [W, H] = mobile ? [800, 1000] : [1600, 820];
   const L = mobile ? H : W, S = mobile ? W : H; // L eje del flujo, S eje transversal
   const tot = Math.max(sources.reduce((a, b) => a + b.v, 0), targets.reduce((a, b) => a + b.v, 0) + (leak?.v ?? 0));
@@ -160,8 +169,8 @@ export function Sankey({ sources, mid, targets, note, leak }: { sources: { h: st
     return <g key={txt} className="po" style={D(i, 0.2, 0.2)}>{ML(x, y - (mobile && side === 'a' ? (txt.split('\n').length - 1) * fs * 1.2 : 0), txt, { fs: mobile ? 19 : fs, a, c, fw: 600 })}</g>;
   };
   return <svg className="vis" viewBox={`0 0 ${W} ${H}`}>
-    {src.map((r, i) => <path key={'s' + i} d={band(p0 + 10, r.s, pm - mw / 2, r.ms, r.h)} fill={r.c ?? C.ink} fillOpacity={0.34} className="fa" style={D(i, 0.4, 0.3)} />)}
-    {tgt.map((r, i) => <path key={'t' + i} d={band(pm + mw / 2, r.ms, p1 - 10, r.s, r.h)} fill={r.c ?? mid.c} fillOpacity={0.34} className="fa" style={D(i, 1.6, 0.3)} />)}
+    {src.map((r, i) => <path key={'s' + i} d={band(p0 + 10, r.s, pm - mw / 2, r.ms, r.h)} fill={r.c ?? C.ink} fillOpacity={hv === 's' + i ? 0.7 : 0.34} className="fa" style={{ ...D(i, 0.4, 0.3), cursor: 'pointer', transition: 'fill-opacity .2s' }} onPointerEnter={() => setHv('s' + i)} onPointerLeave={() => setHv(null)} />)}
+    {tgt.map((r, i) => <path key={'t' + i} d={band(pm + mw / 2, r.ms, p1 - 10, r.s, r.h)} fill={r.c ?? mid.c} fillOpacity={hv === 't' + i ? 0.7 : 0.34} className="fa" style={{ ...D(i, 1.6, 0.3), cursor: 'pointer', transition: 'fill-opacity .2s' }} onPointerEnter={() => setHv('t' + i)} onPointerLeave={() => setHv(null)} />)}
     {src.map((r, i) => { const [x, y] = P(p0, r.s); return <rect key={'sr' + i} x={x} y={y} width={mobile ? r.h : 10} height={mobile ? 10 : r.h} fill={r.c ?? C.ink} className="po" style={D(i, 0.2, 0.2)} />; })}
     {tgt.map((r, i) => { const [x, y] = P(p1 - 10, r.s); return <rect key={'tr' + i} x={x} y={y} width={mobile ? r.h : 10} height={mobile ? 10 : r.h} fill={r.c ?? mid.c} className="po" style={D(i, 1.6, 0.2)} />; })}
     {(() => { const [x, y] = P(pm - mw / 2, midS); return <rect x={x} y={y} width={mobile ? midH : mw} height={mobile ? mw : midH} fill={mid.c} className="po" style={D(0, 1, 0)} />; })()}
@@ -174,11 +183,11 @@ export function Sankey({ sources, mid, targets, note, leak }: { sources: { h: st
 
 /** Barras horizontales simples con resaltado. */
 export function Bars({ rows, max, unit, hl = [], title }: { rows: { k: string; v: number; c?: string }[]; max: number; unit: string; hl?: number[]; title?: string }) {
-  const { mobile } = useStage();
+  const { tall: mobile } = useStage();
   const [W, H] = mobile ? [800, 760] : [1600, 760];
   const x0 = mobile ? 250 : 420, x1 = W - (mobile ? 90 : 220); const rh = (H - 120) / rows.length;
   return <svg className="vis" viewBox={`0 0 ${W} ${H}`}>
-    {title && T(x0, 40, title, { a: 'start', fs: 22, fw: 600, c: C.mute })}
+    {title && T(20, 40, title, { a: 'start', fs: mobile ? 19 : 22, fw: 600, c: C.mute })}
     {rows.map((r, i) => {
       const y = 80 + i * rh; const w = ((x1 - x0) * r.v) / max; const on = hl.includes(i);
       return <g key={i}>
@@ -193,7 +202,8 @@ export function Bars({ rows, max, unit, hl = [], title }: { rows: { k: string; v
 
 /** Potencia, energía, demanda y cobertura (perfil ilustrativo de 48 h). */
 export function Energy({ phase }: { phase: number }) {
-  const { mobile } = useStage();
+  const { tall: mobile } = useStage();
+  const [hr, setHr] = useState<number | null>(null);
   const [W, H] = mobile ? [800, 860] : [1600, 820];
   const x0 = mobile ? 70 : 110, x1 = W - (mobile ? 30 : 60), y0 = mobile ? 640 : 680, y1 = mobile ? 120 : 110;
   const N = 96; const cap = 750;
@@ -235,13 +245,25 @@ export function Energy({ phase }: { phase: number }) {
         <rect x={mobile ? x0 + 10 : x1 - 420} y={mobile ? H - 82 : y1 + 74} width={22} height={22} fill={C.chr} opacity={0.7} />{T((mobile ? x0 + 10 : x1 - 420) + 34, (mobile ? H - 82 : y1 + 74) + 19, 'Déficit: se importa de la red', { a: 'start', fs: 20, fw: 600 })}
       </g>
     </g>}
-    {T(W / 2, H - 6, 'Perfil ilustrativo de 48 horas, no medición. Solo la potencia instalada (750 kW) es un dato real.', { fs: 16, c: C.mute, fw: 400, it: true, serif: true })}
+    {hr !== null && (() => { const i = Math.round((hr / 48) * (N - 1)); const w = wind[i], dm = dem[i]; const x = X(i); return <g>
+      <line x1={x} x2={x} y1={y1 - 10} y2={y0} stroke={C.ink} strokeWidth={1.5} strokeDasharray="4 4" />
+      {phase >= 1 && <circle cx={x} cy={Y(w)} r={9} fill={C.fnd} stroke="#000" strokeWidth={2} />}
+      {phase >= 2 && <circle cx={x} cy={Y(dm)} r={9} fill={C.ink} stroke="#000" strokeWidth={2} />}
+      <rect x={Math.min(x + 14, x1 - 330)} y={y1 + 120} width={320} height={phase >= 2 ? 112 : 70} rx={8} fill="#050505" stroke={C.line} />
+      {T(Math.min(x + 14, x1 - 330) + 16, y1 + 150, `Hora ${hr.toFixed(0)}`, { a: 'start', fs: 20, fw: 700 })}
+      {phase >= 1 && T(Math.min(x + 14, x1 - 330) + 16, y1 + 180, `Generación: ${Math.round(w)} kW`, { a: 'start', fs: 19, c: C.fnd, fw: 600 })}
+      {phase >= 2 && T(Math.min(x + 14, x1 - 330) + 16, y1 + 208, `Demanda: ${Math.round(dm)} kW · ${w >= dm ? 'exporta ' + Math.round(w - dm) : 'importa ' + Math.round(dm - w)} kW`, { a: 'start', fs: 19, c: w >= dm ? C.hl : C.chr, fw: 600 })}
+    </g>; })()}
+    <rect x={x0} y={y1 - 20} width={x1 - x0} height={y0 - y1 + 20} fill="transparent" style={{ cursor: 'crosshair' }}
+      onPointerMove={(e) => { const sv = (e.currentTarget.ownerSVGElement)!; const pt = sv.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY; const q = pt.matrixTransform(sv.getScreenCTM()!.inverse()); setHr(Math.max(0, Math.min(48, ((q.x - x0) / (x1 - x0)) * 48))); }}
+      onPointerLeave={() => setHr(null)} />
+    {T(W / 2, H - 6, 'Perfil ilustrativo de 48 horas, no medición. Solo la potencia instalada (750 kW) es un dato real. Pasa el cursor para leer cada hora.', { fs: 16, c: C.mute, fw: 400 })}
   </svg>;
 }
 
 /** Diagrama causal (hipótesis de modelamiento). */
 export function CLD({ step }: { step: number }) {
-  const { mobile } = useStage();
+  const { tall: mobile } = useStage();
   const [W, H] = mobile ? [800, 1000] : [1600, 860];
   const n: Record<string, [number, number]> = mobile ? {
     rec: [400, 250], con: [650, 500], inf: [400, 750], cap: [150, 500], cos: [640, 90], dep: [160, 900], dec: [650, 900],
@@ -257,11 +279,11 @@ export function CLD({ step }: { step: number }) {
     return <g key={a + b} style={D(i, base, 0.35)} className="po">
       <path d={`M${sx} ${sy}Q${mx} ${my} ${ex} ${ey}`} fill="none" stroke={c} strokeWidth={3.5} markerEnd={`url(#m${c === C.chr ? 'r' : 'k'})`} />
       <circle cx={mx * 0.5 + (sx + ex) / 4} cy={my * 0.5 + (sy + ey) / 4} r={17} fill={c} />
-      {T(mx * 0.5 + (sx + ex) / 4, my * 0.5 + (sy + ey) / 4 + 8, sign, { fs: 24, fw: 700, c: '#fff' })}
+      {T(mx * 0.5 + (sx + ex) / 4, my * 0.5 + (sy + ey) / 4 + 8, sign, { fs: 24, fw: 800, c: '#0a0a09' })}
     </g>;
   };
   const node = (k: string, c: string, i: number, base: number) => <g key={k} className="po" style={D(i, base, 0.25)}>
-    <ellipse cx={n[k][0]} cy={n[k][1]} rx={mobile ? 120 : 112} ry={62} fill="#fffdf7" stroke={c} strokeWidth={3} />
+    <ellipse cx={n[k][0]} cy={n[k][1]} rx={mobile ? 120 : 112} ry={62} fill="#1a1a17" stroke={c} strokeWidth={3} />
     {ML(n[k][0], n[k][1] - 5, lab[k], { fs: mobile ? 24 : 23, fw: 600 })}
   </g>;
   return <svg className="vis" viewBox={`0 0 ${W} ${H}`}>
@@ -282,7 +304,7 @@ export function CLD({ step }: { step: number }) {
 
 /** Capas superpuestas en axonometría (quién gestiona qué). */
 export function Layers({ layers, outline }: { layers: { h: string; p: string; c: string }[]; outline: number[][] }) {
-  const { mobile } = useStage();
+  const { tall: mobile } = useStage();
   const [W, H] = mobile ? [800, 1000] : [1600, 860];
   const n = layers.length; const lx = mobile ? 400 : 560, gapY = mobile ? 260 : 220, top = mobile ? 150 : 160;
   const sc = mobile ? 300 : 360;
@@ -303,7 +325,7 @@ export function Layers({ layers, outline }: { layers: { h: string; p: string; c:
 
 /** Metabolismo: entradas -> territorio -> salidas. */
 export function Metab({ inputs, outputs, center, c, note }: { inputs: string[]; outputs: string[]; center: string; c: string; note?: string }) {
-  const { mobile } = useStage();
+  const { tall: mobile } = useStage();
   const [W, H] = mobile ? [800, 1000] : [1600, 800];
   const box = mobile ? [200, 380, 400, 240] : [600, 250, 400, 300];
   return <svg className="vis" viewBox={`0 0 ${W} ${H}`}>
@@ -332,7 +354,7 @@ export function Metab({ inputs, outputs, center, c, note }: { inputs: string[]; 
 
 /** Cuadrados de área a la misma escala. */
 export function Scale({ items }: { items: { h: string; ha: number; c: string; p?: string }[] }) {
-  const { mobile } = useStage();
+  const { tall: mobile } = useStage();
   const [W, H] = mobile ? [800, 900] : [1600, 800];
   const maxA = Math.max(...items.map((i) => i.ha));
   const big = mobile ? 520 : 560;
@@ -372,7 +394,7 @@ export function ABM() {
       const cx = W / 2, cy = H * 0.45;
       // caja común
       const pr = 18 + Math.min(60, pool * 0.6);
-      ctx.beginPath(); ctx.arc(cx, cy, pr, 0, Math.PI * 2); ctx.fillStyle = 'rgba(227,165,26,.25)'; ctx.fill(); ctx.strokeStyle = C.hl; ctx.lineWidth = 2; ctx.stroke();
+      ctx.beginPath(); ctx.arc(cx, cy, pr, 0, Math.PI * 2); ctx.fillStyle = 'rgba(242,182,50,.18)'; ctx.fill(); ctx.strokeStyle = C.hl; ctx.lineWidth = 2; ctx.stroke();
       ctx.fillStyle = C.ink; ctx.font = '600 12px Inter Tight, Arial'; ctx.textAlign = 'center'; ctx.fillText('caja común', cx, cy + 4);
       for (const a of ag) {
         a.vx += (Math.random() - 0.5) * 0.0016; a.vy += (Math.random() - 0.5) * 0.0016; a.vx *= 0.96; a.vy *= 0.96;

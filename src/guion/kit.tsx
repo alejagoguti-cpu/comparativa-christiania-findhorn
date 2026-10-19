@@ -2,12 +2,12 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 
 export const C = {
-  ink: '#17150f', paper: '#f3efe6', mute: '#6b665c', line: '#d6cebd',
-  chr: '#c4472b', fnd: '#2e6b57', ken: '#275d9b', hl: '#e3a51a', water: '#9fb9c4', white: '#ffffff',
+  ink: '#eeeae1', paper: '#0a0a09', panel: '#1a1a17', mute: '#8d887d', line: '#2f2e29',
+  chr: '#e0603f', fnd: '#4fb38f', ken: '#5b9be0', hl: '#f2b632', water: '#9fb9c4', white: '#ffffff',
 };
 
 /* ---------- contexto de escenario ---------- */
-export const StageCtx = createContext({ w: 1200, h: 700, mobile: false });
+export const StageCtx = createContext({ w: 1200, h: 700, mobile: false, tall: false });
 export const useStage = () => useContext(StageCtx);
 
 /* ---------- datos OSM ---------- */
@@ -132,7 +132,7 @@ export function Anns({ anns, P, u, data, M, vb }: { anns: Ann[]; P: (p: Pt) => n
       const dx = (a.dx ?? 0) * u, dy = (a.dy ?? 0) * u;
       let bx = x + dx - (dx < 0 ? w : dx > 0 ? 0 : w / 2), by = y + dy - (dy < 0 ? h : dy > 0 ? 0 : h / 2);
       if (vb) { const m = 0.6 * u; bx = Math.min(Math.max(bx, vb[0] + m), vb[0] + vb[2] - w - m); by = Math.min(Math.max(by, vb[1] + m), vb[1] + vb[3] - h - m); }
-      const bg = a.dark ? C.ink : '#fffdf7'; const fg = a.dark ? '#fff' : C.ink;
+      const bg = 'rgba(8,8,7,.92)'; const fg = '#f3efe6';
       out.push(<g key={i} className="po" style={st}>
         {(dx || dy) ? <line x1={x} y1={y} x2={Math.min(Math.max(x + dx, bx), bx + w)} y2={Math.min(Math.max(y + dy, by), by + h)} stroke={col} strokeWidth={0.2 * u} /> : null}
         {(dx || dy) ? <circle cx={x} cy={y} r={0.45 * u} fill={col} stroke="#fff" strokeWidth={0.15 * u} /> : null}
@@ -142,11 +142,11 @@ export function Anns({ anns, P, u, data, M, vb }: { anns: Ann[]; P: (p: Pt) => n
       </g>);
     } else if (a.t === 'text') {
       const [x, y] = P(a.at); const fs = (a.size ?? 1) * 1.15 * u;
-      out.push(<text key={i} className="po" style={st} x={x} y={y} fontSize={fs} textAnchor={a.anchor ?? 'middle'} fill={a.c ?? C.ink} fontFamily={a.italic ? 'Newsreader, Georgia, serif' : 'Inter Tight, Arial, sans-serif'} fontStyle={a.italic ? 'italic' : 'normal'} fontWeight={a.italic ? 500 : 600} paintOrder="stroke" stroke="rgba(255,253,247,.85)" strokeWidth={fs * 0.22}>{a.text}</text>);
+      out.push(<text key={i} className="po" style={st} x={x} y={y} fontSize={fs} textAnchor={a.anchor ?? 'middle'} fill={a.c ?? C.ink} fontFamily="Inter Tight, Arial, sans-serif" fontWeight={700} paintOrder="stroke" stroke="rgba(0,0,0,.85)" strokeWidth={fs * 0.25}>{a.text}</text>);
     } else if (a.t === 'scale') {
       const [x, y] = P(a.at); const px = (M ?? 1) * a.meters; const fs = 0.95 * u;
       out.push(<g key={i} className="po" style={st}>
-        <rect x={x - 0.4 * u} y={y - 1.9 * u} width={px + 0.8 * u} height={2.6 * u} fill="rgba(255,253,247,.85)" />
+        <rect x={x - 0.4 * u} y={y - 1.9 * u} width={px + 0.8 * u} height={2.6 * u} rx={0.3 * u} fill="rgba(8,8,7,.85)" />
         <path d={`M${x} ${y - 0.4 * u}V${y}H${x + px}V${y - 0.4 * u}`} fill="none" stroke={C.ink} strokeWidth={0.18 * u} />
         <text x={x} y={y - 0.75 * u} fontSize={fs} fontFamily="Inter Tight, Arial" fill={C.ink}>{a.meters >= 1000 ? a.meters / 1000 + ' km' : a.meters + ' m'}</text>
       </g>);
@@ -174,18 +174,27 @@ export function Anns({ anns, P, u, data, M, vb }: { anns: Ann[]; P: (p: Pt) => n
   return <g>{out}</g>;
 }
 
-/* ---------- foto anotada ---------- */
+/* ---------- foto anotada (clic para ampliar) ---------- */
 export function Photo({ img, anns = [], crop, mcrop, frac = true }: { img: string; anns?: Ann[]; crop?: [number, number, number, number]; mcrop?: [number, number, number, number]; frac?: boolean }) {
   const { mobile } = useStage();
   const [f, w, h] = IMG[img];
-  const vb = (mobile && mcrop) || crop || [0, 0, w, h];
-  const u = (vb[2] / 62) * (mobile ? 1.45 : 1);
-  // coordenadas en fracción (0–1) de la imagen completa si frac=true
+  const base = (mobile && mcrop) || crop || [0, 0, w, h];
+  const [z, setZ] = useState<null | [number, number]>(null);
+  const vb = z ? [Math.max(base[0], Math.min(base[0] + base[2] * 0.6, z[0] - base[2] * 0.2)), Math.max(base[1], Math.min(base[1] + base[3] * 0.6, z[1] - base[3] * 0.2)), base[2] * 0.4, base[3] * 0.4] : base;
+  const u = (base[2] / 62) * (mobile ? 1.45 : 1);
   const P = (p: Pt) => (frac ? [p[0] * w, p[1] * h] : p);
-  return <svg className="vis" viewBox={vb.join(' ')} preserveAspectRatio="xMidYMid meet" style={{ overflow: 'hidden' }}>
-    <image href={`guion/img/${f}`} x={0} y={0} width={w} height={h} preserveAspectRatio="none" />
-    <Anns anns={anns} P={P} u={u} vb={vb} />
-  </svg>;
+  const click = (e: React.MouseEvent<SVGSVGElement>) => {
+    e.stopPropagation();
+    if (z) return setZ(null);
+    const sv = e.currentTarget; const pt = sv.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY;
+    const m = sv.getScreenCTM(); if (!m) return; const q = pt.matrixTransform(m.inverse()); setZ([q.x, q.y]);
+  };
+  return <div className="fill">
+    <svg className={'vis zoomable' + (z ? ' z' : '')} viewBox={vb.join(' ')} preserveAspectRatio="xMidYMid meet" style={{ overflow: 'hidden', transition: 'all .4s' }} onClick={click}>
+      <image href={`guion/img/${f}`} x={0} y={0} width={w} height={h} preserveAspectRatio="none" />
+      <Anns anns={anns} P={P} u={u} vb={base} />
+    </svg>
+  </div>;
 }
 
 export function Pair({ items }: { items: { img: string; anns?: Ann[]; cap?: ReactNode; crop?: [number, number, number, number] }[] }) {
@@ -202,11 +211,12 @@ const mx = (lon: number, z: number) => ((lon + 180) / 360) * 256 * 2 ** z;
 const my = (lat: number, z: number) => { const s = Math.sin((lat * Math.PI) / 180); return (0.5 - Math.log((1 + s) / (1 - s)) / (4 * Math.PI)) * 256 * 2 ** z; };
 const TILES: Record<string, string> = {
   sat: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-  gris: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}',
+  gris: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',
+  dark: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',
 };
 export const TILE_CREDIT: Record<string, string> = {
   sat: 'Imagen satelital: Esri, Maxar, Earthstar Geographics',
-  gris: 'Base cartográfica: Esri, HERE, Garmin',
+  gris: 'Base cartográfica: Esri, HERE, Garmin (Dark Gray Canvas)',
 };
 
 export type MapProps = {
@@ -226,16 +236,23 @@ function GeoMapInner({ site, bbox, base = 'sat', plan = false, anns = [], dim = 
   const pxw = Math.max(SW, 300) * (window.devicePixelRatio > 1 ? 1.4 : 1);
   let z = Math.floor(Math.log2((pxw * 360) / (256 * (e0 - w0) * 1.15)));
   z = Math.max(2, Math.min(base === 'gris' ? 16 : 19, z));
-  // ajustar caja a la proporción del escenario (cubrir, sin franjas)
   const X0 = mx(w0, z), X1 = mx(e0, z), Y0 = my(n0, z), Y1 = my(s0, z);
   const cx = (X0 + X1) / 2, cy = (Y0 + Y1) / 2;
   let vw = X1 - X0, vh = Y1 - Y0; const asp = SW / Math.max(SH, 1);
   if (vw / vh > asp) vh = vw / asp; else vw = vh * asp;
   const ox = cx - vw / 2, oy = cy - vh / 2;
-  const vb = [0, 0, vw, vh];
   const P = (p: Pt) => [mx(p[0], z) - ox, my(p[1], z) - oy];
   const u = (vw / 62) * (mobile ? 1.5 : 1);
   const metersPerPx = (40075016.7 * Math.cos(((s0 + n0) / 2) * Math.PI / 180)) / (256 * 2 ** z);
+  // vista interactiva (zoom y desplazamiento)
+  const [view, setView] = useState({ k: 1, x: 0, y: 0 });
+  const [show, setShow] = useState({ calles: true, anot: true });
+  const [tip, setTip] = useState<null | { x: number; y: number; t: string; s: string }>(null);
+  const drag = useRef<null | { x: number; y: number; vx: number; vy: number; moved: boolean }>(null);
+  const wrap = useRef<HTMLDivElement>(null);
+  const svgPt = (cx2: number, cy2: number) => { const r = wrap.current!.getBoundingClientRect(); const s = Math.min(r.width / vw, r.height / vh); return [(cx2 - r.left - (r.width - vw * s) / 2) / s, (cy2 - r.top - (r.height - vh * s) / 2) / s, s] as const; };
+  const zoomAt = (px: number, py: number, f: number) => setView((v) => { const k2 = Math.min(8, Math.max(1, v.k * f)); const ax = (px - v.x) / v.k, ay = (py - v.y) / v.k; return clampV({ k: k2, x: px - ax * k2, y: py - ay * k2 }); });
+  const clampV = (v: { k: number; x: number; y: number }) => ({ k: v.k, x: Math.min(0, Math.max(vw - vw * v.k, v.x)), y: Math.min(0, Math.max(vh - vh * v.k, v.y)) });
 
   const tiles = useMemo(() => {
     if (base === 'none') return [];
@@ -244,43 +261,74 @@ function GeoMapInner({ site, bbox, base = 'sat', plan = false, anns = [], dim = 
     for (let x = tx0; x <= tx1; x++) for (let y = ty0; y <= ty1; y++) t.push([x, y]);
     return t;
   }, [base, z, ox, oy, vw, vh]);
-
-  const inView = (g: number[]) => {
-    for (let j = 0; j < g.length; j += 2) {
-      const x = mx(g[j], z) - ox, y = my(g[j + 1], z) - oy;
-      if (x > 0 && x < vw && y > 0 && y < vh) return true;
-    }
-    return false;
-  };
-  const toD = (g: number[], close: boolean) => {
-    let s = '';
-    for (let j = 0; j < g.length; j += 2) s += (j ? 'L' : 'M') + (mx(g[j], z) - ox).toFixed(1) + ' ' + (my(g[j + 1], z) - oy).toFixed(1);
-    return s + (close ? 'Z' : '');
-  };
+  const inView = (g: number[]) => { for (let j = 0; j < g.length; j += 2) { const x = mx(g[j], z) - ox, y = my(g[j + 1], z) - oy; if (x > 0 && x < vw && y > 0 && y < vh) return true; } return false; };
+  const pts = (g: number[]) => { const o: number[][] = []; for (let j = 0; j < g.length; j += 2) o.push([mx(g[j], z) - ox, my(g[j + 1], z) - oy]); return o; };
+  const toD = (g: number[], close: boolean) => 'M' + pts(g).map((p) => p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join('L') + (close ? 'Z' : '');
+  const RT: Record<string, string> = { footway: 'sendero peatonal', path: 'sendero', pedestrian: 'calle peatonal', cycleway: 'ciclovía', residential: 'calle residencial', tertiary: 'vía', secondary: 'vía arteria', primary: 'vía principal', trunk: 'troncal', service: 'vía de servicio', living_street: 'calle compartida', steps: 'escaleras' };
   const layers = useMemo(() => {
-    if (!data || !plan) return null;
+    if (!data) return null;
     const water = data.w.filter((f: any) => inView(f[2])).map((f: any) => toD(f[2], true)).join('');
     const green = data.l.filter((f: any) => /wood|forest|wetland|scrub|grass|village_green|beach|allotments/.test(f[2]) && inView(f[3])).map((f: any) => toD(f[3], true)).join('');
-    const bld = data.b.filter((f: any) => inView(f[3])).map((f: any) => toD(f[3], true)).join('');
-    const roads = data.r.filter((f: any) => inView(f[3]) && !/^ww_/.test(f[2])).map((f: any) => ({ d: toD(f[3], false), major: /trunk|primary|secondary|tertiary/.test(f[2]) }));
-    const ww = data.r.filter((f: any) => /^ww_/.test(f[2]) && inView(f[3])).map((f: any) => toD(f[3], false)).join('');
-    return { water, green, bld, roads, ww };
-  }, [data, plan, z, ox, oy, vw, vh]);
+    const bld = data.b.filter((f: any) => inView(f[3]));
+    const roads = data.r.filter((f: any) => inView(f[3]) && !/^ww_/.test(f[2]));
+    const ww = data.r.filter((f: any) => /^ww_/.test(f[2]) && inView(f[3]));
+    // una etiqueta por nombre de calle, sobre su tramo más largo
+    const best: Record<string, { L: number; p: number[][] }> = {};
+    for (const f of [...roads, ...ww]) {
+      if (!f[1] || /^C\d|^BF|^T\d/.test(f[1])) continue;
+      const p = pts(f[3]); let L = 0; for (let j = 1; j < p.length; j++) L += Math.hypot(p[j][0] - p[j - 1][0], p[j][1] - p[j - 1][1]);
+      if (!best[f[1]] || best[f[1]].L < L) best[f[1]] = { L, p };
+    }
+    const labels = Object.entries(best).filter(([n, v]) => v.L > n.length * u * 0.62).map(([n, v]) => {
+      let acc = 0, half = v.L / 2, j = 1;
+      for (; j < v.p.length; j++) { const s = Math.hypot(v.p[j][0] - v.p[j - 1][0], v.p[j][1] - v.p[j - 1][1]); if (acc + s >= half) break; acc += s; }
+      const a2 = v.p[Math.max(0, j - 1)], b2 = v.p[Math.min(v.p.length - 1, j)];
+      let ang = (Math.atan2(b2[1] - a2[1], b2[0] - a2[0]) * 180) / Math.PI; if (ang > 90) ang -= 180; if (ang < -90) ang += 180;
+      return { n, x: (a2[0] + b2[0]) / 2, y: (a2[1] + b2[1]) / 2, ang };
+    }).filter((l) => l.x > 0 && l.x < vw && l.y > 0 && l.y < vh);
+    return { water, green, bld, roads, ww, labels };
+  }, [data, z, ox, oy, vw, vh]);
 
   const onSat = base === 'sat';
-  return <svg className="vis" viewBox={vb.join(' ')} preserveAspectRatio="xMidYMid meet" style={{ overflow: 'hidden' }}>
-    <rect x={0} y={0} width={vw} height={vh} fill={base === 'none' ? '#f7f4ec' : '#ddd8cc'} />
-    {tiles.map(([x, y]) => <image key={x + '_' + y} href={TILES[base].replace('{z}', String(z)).replace('{x}', String(x)).replace('{y}', String(y))} x={x * 256 - ox} y={y * 256 - oy} width={256.6} height={256.6} />)}
-    {dim > 0 && <rect x={0} y={0} width={vw} height={vh} fill={onSat ? '#0d0c08' : '#f3efe6'} opacity={dim} />}
-    {layers && <g>
-      <path d={layers.green} fill={onSat ? 'none' : '#e3e6d4'} />
-      <path d={layers.water} fill={onSat ? 'rgba(120,170,200,.25)' : '#c9d9de'} />
-      <path d={layers.ww} fill="none" stroke={onSat ? 'rgba(160,200,230,.7)' : '#9fbcc8'} strokeWidth={0.25 * u} />
-      {layers.roads.map((r: any, i: number) => <path key={i} d={r.d} fill="none" stroke={onSat ? 'rgba(255,255,255,.35)' : r.major ? '#b9b2a2' : '#d2cbbb'} strokeWidth={(r.major ? 0.32 : 0.14) * u} />)}
-      <path d={layers.bld} fill={onSat ? 'rgba(255,255,255,.18)' : '#5a554b'} stroke={onSat ? 'rgba(255,255,255,.45)' : 'none'} strokeWidth={0.05 * u} />
-    </g>}
-    <Anns anns={anns} P={P} u={u} data={data} M={1 / metersPerPx} vb={vb} />
-  </svg>;
+  const TL = base === 'gris' ? TILES.dark : TILES[base];
+  const hover = (t: string, s2: string) => (e: React.PointerEvent) => { const r = wrap.current!.getBoundingClientRect(); setTip({ x: e.clientX - r.left, y: e.clientY - r.top, t, s: s2 }); };
+  return <div className="fill" ref={wrap} style={{ touchAction: 'none' }}
+    onWheel={(e) => { const [px, py] = svgPt(e.clientX, e.clientY); zoomAt(px, py, e.deltaY < 0 ? 1.25 : 0.8); }}
+    onPointerDown={(e) => { drag.current = { x: e.clientX, y: e.clientY, vx: view.x, vy: view.y, moved: false }; }}
+    onPointerMove={(e) => { const d2 = drag.current; if (!d2) return; const s = svgPt(0, 0)[2]; const dx = (e.clientX - d2.x) / s, dy = (e.clientY - d2.y) / s; if (Math.abs(dx) + Math.abs(dy) > 3) d2.moved = true; setView((v) => clampV({ ...v, x: d2.vx + dx, y: d2.vy + dy })); }}
+    onPointerUp={() => { drag.current = null; }} onPointerLeave={() => { drag.current = null; setTip(null); }}
+    onDoubleClick={() => setView({ k: 1, x: 0, y: 0 })}>
+    <svg className="vis" viewBox={`0 0 ${vw} ${vh}`} preserveAspectRatio="xMidYMid meet" style={{ overflow: 'hidden', cursor: drag.current ? 'grabbing' : 'grab' }}>
+      <g transform={`translate(${view.x} ${view.y}) scale(${view.k})`} style={{ transition: drag.current ? 'none' : 'transform .25s ease' }}>
+        <rect x={0} y={0} width={vw} height={vh} fill="#11110f" />
+        {tiles.map(([x, y]) => <image key={x + '_' + y} href={TL.replace('{z}', String(z)).replace('{x}', String(x)).replace('{y}', String(y))} x={x * 256 - ox} y={y * 256 - oy} width={256.6} height={256.6} />)}
+        {dim > 0 && <rect x={0} y={0} width={vw} height={vh} fill="#000" opacity={dim} />}
+        {layers && <g>
+          {plan && <>
+            <path d={layers.green} fill={onSat ? 'none' : 'rgba(79,179,143,.12)'} />
+            <path d={layers.water} fill={onSat ? 'rgba(91,155,224,.18)' : 'rgba(91,155,224,.22)'} />
+            {layers.ww.map((f: any, i: number) => <path key={'w' + i} d={toD(f[3], false)} fill="none" stroke="rgba(120,180,240,.75)" strokeWidth={0.25 * u} />)}
+          </>}
+          {show.calles && layers.roads.map((f: any, i: number) => { const major = /trunk|primary|secondary|tertiary/.test(f[2]); return <path key={i} d={toD(f[3], false)} fill="none" stroke={onSat ? (major ? 'rgba(255,255,255,.55)' : 'rgba(255,255,255,.28)') : major ? '#7d786d' : '#4a4740'} strokeWidth={(major ? 0.34 : 0.15) * u} />; })}
+          {plan && <path d={layers.bld.map((f: any) => toD(f[3], true)).join('')} fill={onSat ? 'rgba(255,255,255,.14)' : '#3d3a33'} stroke={onSat ? 'rgba(255,255,255,.4)' : '#57534a'} strokeWidth={0.05 * u} />}
+          {/* zonas sensibles al cursor */}
+          {layers.bld.filter((f: any) => f[1]).map((f: any, i: number) => <path key={"hb" + i} className="feat-hit" d={toD(f[3], true)} fill="#000" fillOpacity={0} stroke="none" style={{ pointerEvents: "all" }} onPointerMove={hover(f[1], 'edificio · OSM')} onPointerLeave={() => setTip(null)} />)}
+          {layers.roads.filter((f: any) => f[1]).map((f: any, i: number) => <path key={"hr" + i} className="feat-hit" d={toD(f[3], false)} fill="none" stroke="#000" strokeOpacity={0} style={{ pointerEvents: "stroke" }} strokeWidth={0.9 * u} onPointerMove={hover(f[1], (RT[f[2]] ?? f[2]) + ' · OSM')} onPointerLeave={() => setTip(null)} />)}
+          {show.calles && layers.labels.map((l: any, i: number) => <text key={'lb' + i} x={l.x} y={l.y} transform={`rotate(${l.ang} ${l.x} ${l.y})`} textAnchor="middle" dy={0.28 * u} fontSize={0.62 * u / Math.sqrt(view.k)} fontFamily="JetBrains Mono, monospace" fontWeight={600} fill={onSat ? '#f3efe6' : '#bdb7aa'} paintOrder="stroke" stroke="rgba(0,0,0,.85)" strokeWidth={0.2 * u} style={{ pointerEvents: 'none' }}>{l.n}</text>)}
+        </g>}
+        {show.anot && <g style={{ pointerEvents: "none" }}><Anns anns={anns} P={P} u={u} data={data} M={1 / metersPerPx} vb={[0, 0, vw, vh]} /></g>}
+      </g>
+    </svg>
+    {tip && <div className="tip" style={{ left: tip.x, top: tip.y }}>{tip.t}<small>{tip.s}</small></div>}
+    <div className="mapctl" onPointerDown={(e) => e.stopPropagation()}>
+      <button onClick={() => zoomAt(vw / 2, vh / 2, 1.5)}>Acercar</button>
+      <button onClick={() => zoomAt(vw / 2, vh / 2, 1 / 1.5)}>Alejar</button>
+      <button onClick={() => setView({ k: 1, x: 0, y: 0 })}>Encuadre</button>
+      <button className={show.calles ? '' : 'off'} onClick={() => setShow((s) => ({ ...s, calles: !s.calles }))}>Calles</button>
+      <button className={show.anot ? '' : 'off'} onClick={() => setShow((s) => ({ ...s, anot: !s.anot }))}>Anotaciones</button>
+    </div>
+    {!mobile && <span className="hint">Arrastra · rueda para acercar · cursor sobre calles y edificios</span>}
+  </div>;
 }
 
 /* ---------- figura-fondo a la misma escala ---------- */
@@ -306,8 +354,8 @@ function FG({ site, center, c, boundary, R, mobile }: any) {
   const water = d.w.filter((f: any) => near(f[2])).map((f: any) => toD(f[2])).join('');
   const bnd = boundary ? d.l.filter((f: any) => f[0] === boundary).map((f: any) => toD(f[3])).join('') : '';
   return <svg className="vis" viewBox={`${-R} ${-R} ${2 * R} ${2 * R}`}>
-    <rect x={-R} y={-R} width={2 * R} height={2 * R} fill="#fbfaf6" stroke={C.line} />
-    <path d={water} fill="#d6e3e7" />
+    <rect x={-R} y={-R} width={2 * R} height={2 * R} fill="#11110f" stroke={C.line} />
+    <path d={water} fill="rgba(91,155,224,.2)" />
     <path d={bld} fill={C.ink} />
     {bnd && <path d={bnd} fill="none" stroke={c} strokeWidth={0.45 * u} pathLength={1} className="dr" style={{ animationDelay: '.6s' }} />}
     <Anns anns={[{ t: 'scale', at: [0, 0], meters: 200 }]} P={() => [-R + 1.5 * u, R - 1.5 * u]} u={u} M={1} />
