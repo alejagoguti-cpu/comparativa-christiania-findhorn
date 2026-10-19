@@ -3,7 +3,8 @@ import type { ReactNode } from 'react';
 import { C, GeoMap, Pair, Photo, FigureGround, TILE_CREDIT, type Ann, type Pt } from './kit';
 import { Axo } from './Axo';
 import { Ico } from './icons';
-import { Ask, ABM, Bars, Big, Chk, CLD, Cols, Cycle, Energy, Flow, Layers, Metab, Net, Qs, Sankey, Scale, Timeline } from './diagrams';
+import { KennedyABM } from './kabm';
+import { Ask, Bars, Big, Chk, CLD, Cols, Cycle, Energy, Flow, Layers, Metab, Net, Qs, Sankey, Scale, Timeline } from './diagrams';
 
 export type Block = { n: string; t: string; time: string; part: string };
 export const BLOCKS: Block[] = [
@@ -901,8 +902,9 @@ export const STEPS: Step[] = [
     nota: 'Esta hipótesis puede representarse mediante variables como ingresos comunitarios, costos de mantenimiento, participación, conocimientos disponibles, demanda energética, consumo de agua, generación de residuos y dependencia de servicios externos.',
   },
   {
-    b: 12, t: 'Un modelo basado en agentes', d: 'Residentes, organizaciones y prestadores deciden según recursos, necesidades y reglas de cooperación. Puede probar los escenarios.',
-    v: () => <ABM />,
+    b: 12, t: 'Simulación en Kennedy: ¿qué pasa si algo cambia?', d: 'Recicladores de María Paz y Patio Bonito recogen en Corabastos, venden en un acopio y la caja común paga equipos y mantenimiento.',
+    v: () => <KennedyABM />,
+    src: `${OSM}. ${TILE_CREDIT.sat}. Acopios y reglas hipotéticos: simulación ilustrativa, no calibrada con datos.`,
     nota: 'En un modelo basado en agentes, los residentes, las organizaciones comunitarias y los prestadores de servicios tomarían decisiones según sus recursos, necesidades y reglas de cooperación. Así podríamos explorar cómo cambian los resultados cuando aumentan los costos, disminuyen los ingresos o se fortalecen los mecanismos de reinversión colectiva.',
   },
   {
