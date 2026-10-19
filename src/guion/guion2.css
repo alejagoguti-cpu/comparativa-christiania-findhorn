@@ -454,3 +454,32 @@ svg.vis { width: 100%; height: 100%; display: block; }
 @keyframes flyIn { 0% { transform: scale(.35); opacity: 0; } 40% { opacity: 0; } 85% { opacity: 1; } 100% { transform: none; opacity: 1; } }
 
 .scene.out .anns, .scene.out .mapctl, .scene.out .hint, .scene.out .tip { opacity: 0; transition: opacity .5s; }
+
+/* ===== imagen más grande: texto compacto ===== */
+.top2 { padding: 8px 18px; gap: 16px; }
+.top2 .brand b { font-size: 14px; }
+.top2 .brand span { display: none; }
+.title5 { padding: 8px 18px 4px; gap: 4px; grid-template-columns: 1fr; }
+.title5 .kick { min-height: 22px; font-size: 11px; gap: 8px; }
+.title5 .kick .sc-ico { width: 22px; height: 22px; border-radius: 6px; }
+.title5 .kick .sc-ico svg { width: 14px; height: 14px; }
+.title5 h1 { font-size: clamp(22px, 2.15vw, 34px); max-width: none; letter-spacing: -.025em; line-height: 1.08; }
+.title5 .sub { min-height: 22px; }
+.title5 .dek { font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.focus5 { padding: 3px 12px 3px 4px; font-size: 14px; }
+.focus5 .fi { width: 22px; height: 22px; }
+.stage5 { margin: 4px 12px 0; border-radius: 14px; }
+.stage5 .scene { inset: 6px; }
+.foot5 { padding: 6px 18px 8px; gap: 4px; }
+.src5 { font-size: 10px; }
+.row5 .scrub { height: 22px; }
+.row5 .nav button { height: 34px; padding: 0 14px; font-size: 13px; }
+.clickhint { bottom: 10px; padding: 5px 12px; font-size: 11.5px; }
+@media (max-width: 900px), (orientation: portrait) and (max-width: 1100px) {
+  .title5 h1 { font-size: 21px; min-height: 0; }
+  .title5 .dek { white-space: normal; font-size: 13px; }
+  .stage5 { height: 66vh; margin: 2px 6px 0; }
+  .stage5 .scene { inset: 4px; }
+  .top2 { padding: 8px 10px 6px; }
+  .row5 .nav button { height: 46px; }
+}
