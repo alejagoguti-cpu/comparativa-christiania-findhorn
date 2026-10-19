@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import { C, GeoMap, Pair, Photo, FigureGround, TILE_CREDIT, type Ann, type Pt } from './kit';
 import { Axo } from './Axo';
 import { Ico } from './icons';
-import { ABM, Bars, Big, Chk, CLD, Cols, Cycle, Energy, Flow, Layers, Metab, Net, Qs, Sankey, Scale, Timeline } from './diagrams';
+import { Ask, ABM, Bars, Big, Chk, CLD, Cols, Cycle, Energy, Flow, Layers, Metab, Net, Qs, Sankey, Scale, Timeline } from './diagrams';
 
 export type Block = { n: string; t: string; time: string; part: string };
 export const BLOCKS: Block[] = [
@@ -48,6 +48,7 @@ const gris = `${OSM}. ${TILE_CREDIT.gris}`;
 const g = (x: number, y: number): Pt => [x / 1400, y / 924]; // plano de Gedde (vista 1400 px)
 const k = (x: number, y: number): Pt => [x / 3200, y / 1509]; // plano de subáreas 2018
 
+const SUBI: Pt[] = [k(460, 88), k(720, 151), k(806, 241), k(955, 262), k(928, 567), k(994, 693), k(1050, 740), k(985, 777), k(961, 719), k(646, 579), k(642, 523), k(430, 338), k(406, 361)];
 const chrBoundary = (d = 0.3, c = C.chr): Ann => ({ t: 'feat', kind: 'l', id: CHR_ID, c, w: 0.42, d, fill: 'rgba(196,71,43,.10)' });
 
 /* ---------- pasos ---------- */
@@ -101,9 +102,26 @@ export const STEPS: Step[] = [
   },
   {
     b: 0, t: 'No preguntamos si son sostenibles, sino cómo se sostienen', d: '',
-    v: () => <Qs title="Tres preguntas que guían la comparación" items={[
-      { k: '01', q: '¿Cómo se sostienen?' }, { k: '02', q: '¿Qué problemas enfrentan?' }, { k: '03', q: '¿Cuáles son los límites de su autonomía?' },
+    v: () => <Ask title="Tres preguntas que guían la comparación" items={[
+      { q: '¿Cómo se sostienen?', c: C.fnd, a: 'Con acuerdos sobre el suelo, aportes a una caja común e infraestructura que ellos mismos mantienen.', v: () => <Photo img="chr_plano_subareas_2018" crop={[250, 20, 1500, 1000]} anns={[
+        { t: 'line', pts: SUBI, close: true, c: C.fnd, w: 0.6, d: 0.3, fill: 'rgba(79,179,143,.22)' },
+        { t: 'tag', at: k(700, 380), text: 'Suelo comprado por la Fundación\n(acuerdo de 2012)', c: C.fnd, dx: 10, dy: 8, d: 1 },
+      ]} /> },
+      { q: '¿Qué problemas enfrentan?', c: C.chr, a: 'Comercio ilegal y violencia en Christiania; crisis financiera e incendio en Findhorn.', v: () => <Photo img="chr_pusher2024" crop={[0, 600, 1600, 1531]} anns={[
+        { t: 'line', pts: [[0.36, 0.62], [0.72, 0.6], [0.86, 0.97], [0.3, 0.97]], close: true, c: C.chr, w: 0.6, d: 0.4 },
+        { t: 'tag', at: [0.55, 0.72], text: 'Pusher Street, abril de 2024', c: C.chr, dx: 6, dy: -4, d: 1.2 },
+      ]} /> },
+      { q: '¿Cuáles son los límites de su autonomía?', c: C.ken, a: 'Dependen de redes públicas, del Estado y del mercado inmobiliario que los rodea.', v: () => <GeoMap site="christiania" bbox={[12.578, 55.664, 12.628, 55.687]} base="sat" dim={0.35} anns={[
+        chrBoundary(0.2),
+        { t: 'arrow', from: [12.6050, 55.6655], to: [12.6045, 55.6705], c: '#9fd3ff', d: 0.8 },
+        { t: 'tag', at: [12.6050, 55.6655], text: 'Agua, energía y saneamiento de la ciudad', c: '#9fd3ff', d: 1.1 },
+        { t: 'arrow', from: [12.582, 55.6805], to: [12.5965, 55.6760], c: '#fff', d: 1.4 },
+        { t: 'tag', at: [12.582, 55.6805], text: 'Estado', c: '#fff', d: 1.7 },
+        { t: 'arrow', from: [12.6175, 55.6855], to: [12.6075, 55.6790], c: C.hl, d: 2 },
+        { t: 'tag', at: [12.6175, 55.6855], text: 'Mercado inmobiliario', c: C.hl, d: 2.3 },
+      ]} /> },
     ]} />,
+    src: `Plano: Bygningsstyrelsen (2018). Foto: Penguin, CC BY-SA 4.0. Mapa: ${sat}`,
     nota: 'Por eso, más que preguntar si son completamente sostenibles, queremos entender cómo se sostienen, qué problemas enfrentan y cuáles son los límites de su autonomía.',
   },
 
@@ -279,10 +297,20 @@ export const STEPS: Step[] = [
   },
   {
     b: 2, t: 'Autonomía no es ausencia de reglas', d: 'Tres preguntas que toda comunidad debe resolver para permanecer.',
-    v: () => <Cols cols={[
-      { h: 'Christiania', c: C.chr, rows: [['¿Quién controla el suelo?', 'La Fundación (subárea I) y el Estado, que arrienda el resto.'], ['¿Quién paga?', 'Residentes y negocios mediante la caja común; hipoteca y arriendo.'], ['¿Quién decide?', 'Asambleas comunitarias y la Fundación, dentro del marco legal danés.']] },
-      { h: 'Findhorn', c: C.fnd, rows: [['¿Quién controla el suelo?', 'Varias entidades: fideicomisos, sociedades y propietarios privados.'], ['¿Quién paga?', 'Ingresos educativos, visitantes, donaciones y servicios.'], ['¿Quién decide?', 'Juntas de cada entidad y la asociación de residentes.']] },
+    v: () => <Ask title="Tres preguntas para permanecer" items={[
+      { q: '¿Quién controla el suelo?', c: C.chr, a: 'Christiania: la Fundación compra la subárea I y arrienda el resto al Estado. Findhorn: varias entidades y propietarios privados.', v: () => <Photo img="chr_plano_subareas_2018" anns={[
+        { t: 'line', pts: SUBI, close: true, c: C.chr, w: 0.6, d: 0.3, fill: 'rgba(224,96,63,.2)' },
+        { t: 'tag', at: k(700, 380), text: 'I · comprada', c: C.chr, dx: 10, dy: 6, d: 0.8 },
+        { t: 'tag', at: k(650, 660), text: 'II · edificios comprados, suelo arrendado', c: C.ken, dx: 4, dy: 9, d: 1.2 },
+        { t: 'tag', at: k(1810, 1040), text: 'III · arrendada al Estado', c: C.fnd, dx: 6, dy: -8, d: 1.6 },
+      ]} /> },
+      { q: '¿Quién paga las obligaciones?', c: C.hl, a: 'Christiania: residentes y negocios mediante la caja común, más hipoteca y arriendo. Findhorn: programas, visitantes, donaciones y servicios.', v: () => <Sankey sources={[{ h: 'Residentes', v: 5, c: C.chr }, { h: 'Negocios y talleres', v: 3, c: C.chr }, { h: 'Espacios culturales', v: 2, c: C.chr }]} mid={{ h: 'Caja común', c: '#b07d0c' }} targets={[{ h: 'Servicios comunes', v: 3.5, c: C.fnd }, { h: 'Mantenimiento', v: 3, c: C.ken }, { h: 'Hipoteca y arriendo', v: 3.5, c: C.ink }]} /> },
+      { q: '¿Quién decide sobre los bienes comunes?', c: C.fnd, a: 'Christiania: asambleas y la Fundación, dentro de la ley danesa. Findhorn: las juntas de cada entidad y la asociación de residentes.', v: () => <Net center={{ h: 'Comunidad\nresidencial', c: C.fnd }} nodes={[
+        { h: 'Findhorn Foundation', p: 'fideicomiso educativo', c: C.chr }, { h: 'Park Ecovillage Trust', p: 'fideicomiso del lugar', c: C.fnd },
+        { h: 'New Findhorn Association', p: 'residentes', c: C.ken }, { h: 'Wind Park', p: 'energía', c: C.hl }, { h: 'Propietarios', p: 'privados', c: C.mute },
+      ]} /> },
     ]} />,
+    src: 'Plano: Bygningsstyrelsen (2018). Esquemas cualitativos elaborados para esta presentación.',
     nota: 'Los dos casos muestran que la autonomía no significa ausencia de reglas o compromisos. Para permanecer en el tiempo, una comunidad necesita resolver quién controla el suelo, quién paga las obligaciones y quién toma las decisiones sobre los bienes comunes.',
   },
 
@@ -890,9 +918,23 @@ export const STEPS: Step[] = [
   },
   {
     b: 12, t: 'La pregunta final', d: 'No si son completamente autosuficientes, sino…',
-    v: () => <Qs items={[
-      { k: 'RESOLVER', q: '¿Qué logran resolver colectivamente?' }, { k: 'DEPENDER', q: '¿Qué siguen necesitando del exterior?' }, { k: 'ADAPTARSE', q: '¿Cómo se adaptan cuando esas condiciones cambian?' },
+    v: () => <Ask items={[
+      { q: '¿Qué logran resolver colectivamente?', c: C.fnd, a: 'Energía del viento, parte del tratamiento del agua, vivienda ecológica y espacios comunes.', v: () => <GeoMap site="findhorn" bbox={FND_BOX} base="sat" plan dim={0.25} anns={[
+        ...WIND.map((p, i) => ({ t: 'ring', at: p, r: 1.2, c: C.hl, d: 0.3 + i * 0.15 } as Ann)),
+        { t: 'tag', at: WIND[0], text: 'Viento', c: C.hl, dx: -4, dy: -3, d: 0.8 },
+        { t: 'ring', at: LM, r: 1.4, c: C.ken, d: 1 }, { t: 'tag', at: LM, text: 'Agua tratada', c: C.ken, dx: 4, dy: 3, d: 1.2 },
+        { t: 'feat', kind: 'b', name: 'West Whins|Woodside', c: C.fnd, fill: 'rgba(79,179,143,.6)', d: 1.4 },
+        { t: 'tag', at: [-3.5948, 57.6541], text: 'Vivienda ecológica', c: C.fnd, dx: -4, dy: -3, d: 1.7 },
+      ]} /> },
+      { q: '¿Qué siguen necesitando del exterior?', c: C.chr, a: 'Alimentos, materiales, redes públicas de servicios, visitantes y viajes.', v: () => <GeoMap bbox={[-14, 47, 16, 63]} base="sat" dim={0.3} anns={[
+        { t: 'ring', at: FND, r: 0.9, c: C.fnd, d: 0.2 }, { t: 'ring', at: CPH, r: 0.9, c: C.chr, d: 0.3 },
+        { t: 'arrow', from: [-0.1, 51.5], to: FND, c: '#fff', d: 0.6, flow: true }, { t: 'arrow', from: [4.9, 52.4], to: FND, c: '#fff', d: 0.8, flow: true },
+        { t: 'arrow', from: [9.9, 53.5], to: CPH, c: '#fff', d: 1, flow: true }, { t: 'arrow', from: [13.4, 52.5], to: CPH, c: '#fff', d: 1.2, flow: true },
+        { t: 'tag', at: [6, 49.5], text: 'Productos, energía y personas llegan de fuera', c: C.chr, d: 1.6 },
+      ]} /> },
+      { q: '¿Cómo se adaptan cuando cambian las condiciones?', c: C.ken, a: 'Reinvirtiendo recursos, transmitiendo conocimiento y cambiando de institución sin perder la comunidad.', v: () => <Cycle center={'adaptación'} nodes={[{ h: 'Necesidad', c: C.chr }, { h: 'Recursos y\nsaberes', c: C.chr }, { h: 'Práctica\nestable', c: C.fnd }, { h: 'Mantener\no adaptar', c: C.fnd }]} /> },
     ]} />,
+    src: `${sat}`,
     nota: 'En definitiva, la pregunta no es si Christiania o Findhorn son completamente autosuficientes, sino qué logran resolver colectivamente, qué siguen necesitando del exterior y cómo pueden adaptarse cuando esas condiciones cambian.',
   },
   {

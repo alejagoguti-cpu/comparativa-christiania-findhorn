@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { C, useStage, useStops } from './kit';
+import { C, useStage, useStops, StageCtx } from './kit';
+import { useContext } from 'react';
 import { Ico, ico } from './icons';
 const SI = (t: string, x: number, y: number, s: number, c: string) => { const I = ico(t); return <I x={x - s / 2} y={y - s / 2} width={s} height={s} color={c} strokeWidth={1.8} />; };
 
@@ -466,6 +467,29 @@ export function ABM() {
       {b('base', 'Escenario base')}{b('cost', 'Aumentan los costos')}{b('inc', 'Disminuyen los ingresos')}{b('reinv', 'Se fortalece la reinversión')}
       <div><div className="meter"><b style={{ width: `${Math.round(cap * 100)}%` }} /></div><small style={{ color: C.mute }}>Capacidad de adaptación (indicador del modelo)</small></div>
       <small style={{ color: C.mute, lineHeight: 1.35 }}>Simulación ilustrativa con reglas simples. No está calibrada con datos.</small>
+    </div>
+  </div>;
+}
+
+/** Preguntas con respuesta visual: cada clic enfoca una pregunta y muestra su plano o diagrama señalado. */
+export function Ask({ items, title }: { title?: string; items: { q: string; a: string; c: string; v: () => ReactNode }[] }) {
+  const ctx = useContext(StageCtx);
+  const cur = useStops(items.map((x) => x.q));
+  const inner = { ...ctx, sub: 0, setStops: () => {} };
+  return <div className={'ask' + (cur === null ? ' all' : '')}>
+    <div className="ask-q">
+      {title && <h3 className="po">{title}</h3>}
+      {items.map((it, i) => <div key={i} className={'askc po' + (cur === i ? ' on' : cur !== null ? ' off' : '')} style={{ ...D(i, 0.15, 0.3), ['--c' as any]: it.c }}>
+        <span className="ico"><Ico t={it.q + ' ' + it.a} size={20} /></span>
+        <div><span className="n">{String(i + 1).padStart(2, '0')}</span><h4>{it.q}</h4>{cur === i && <p className="ans">{it.a}</p>}</div>
+      </div>)}
+    </div>
+    <div className="ask-v">
+      <StageCtx.Provider value={inner}>
+        {cur === null
+          ? <div className="ask-grid">{items.map((it, i) => <div key={i} className="ask-tile po" style={{ ...D(i, 0.3, 0.3), ['--c' as any]: it.c }}><span className="tn">{String(i + 1).padStart(2, '0')}</span>{it.v()}</div>)}</div>
+          : <div className="ask-one" key={cur} style={{ ['--c' as any]: items[cur].c }}>{items[cur].v()}</div>}
+      </StageCtx.Provider>
     </div>
   </div>;
 }
