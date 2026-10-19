@@ -584,3 +584,87 @@ button { font-family: inherit; }
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 130px;
 }
 .pci-chip.on .t { color: #fff; font-weight: 600; }
+
+/* ---------- Diapositiva narrativa (Plano 01: introducción, tesis y pregunta guía) */
+#intro-slide {
+  position: fixed; z-index: 15;
+  left: 20px; right: calc(min(364px, 31vw) + 30px);
+  top: 112px; bottom: 78px;
+  display: flex; align-items: center; justify-content: center;
+  pointer-events: none;
+}
+.is-card {
+  pointer-events: auto;
+  width: 100%; max-width: 760px; max-height: 100%; overflow-y: auto; scrollbar-width: none;
+  background: rgba(8, 9, 14, 0.86);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 18px;
+  padding: 18px 22px 20px;
+  backdrop-filter: blur(14px);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.7);
+  display: flex; flex-direction: column; gap: 12px;
+  animation: isIn 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.is-card::-webkit-scrollbar { display: none; }
+@keyframes isIn { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+.is-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.is-kicker { font: 600 9.5px var(--mono); letter-spacing: 1.4px; text-transform: uppercase; color: #ebe5d9; }
+.is-close {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: #12131c; border: 1px solid #2a2d40; color: #b0b2c0;
+  font: 500 9px var(--mono); text-transform: uppercase; padding: 4px 8px; border-radius: 7px; cursor: pointer;
+}
+.is-close:hover { color: #fff; border-color: #5a5e78; }
+.is-lead { font: 500 15.5px/1.45 var(--sans); color: #fff; }
+.is-shared { font: 400 12.5px/1.45 var(--sans); color: #c8cad6; }
+.is-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.is-col {
+  background: #0f1018; border: 1px solid #22243a; border-radius: 12px; padding: 10px 12px;
+  display: flex; flex-direction: column; gap: 6px;
+  animation: isIn 0.7s 0.15s both;
+}
+.is-col.chr { border-left: 3px solid #e6956a; }
+.is-col.fnd { border-left: 3px solid #7fbf8e; animation-delay: 0.3s; }
+.is-col p { font: 400 12px/1.45 var(--sans); color: #e2e3ec; }
+.is-tag { font: 600 8.5px var(--mono); letter-spacing: 1px; text-transform: uppercase; color: #9a9cac; }
+.is-col.chr .is-tag { color: #f0b08c; }
+.is-col.fnd .is-tag { color: #9fd9ad; }
+.is-thesis {
+  background: linear-gradient(135deg, rgba(235, 229, 217, 0.1), rgba(235, 229, 217, 0.03));
+  border: 1px solid rgba(235, 229, 217, 0.3); border-radius: 12px; padding: 11px 13px;
+  display: flex; flex-direction: column; gap: 7px;
+  animation: isIn 0.7s 0.45s both;
+}
+.is-thesis .is-tag { color: #ebe5d9; }
+.is-thesis p { font: 600 13px/1.45 var(--sans); color: #fff; }
+.is-pillars { display: flex; flex-wrap: wrap; gap: 5px; }
+.is-pillars span {
+  font: 500 9px var(--mono); text-transform: uppercase; letter-spacing: 0.4px;
+  padding: 3px 8px; border-radius: 20px; color: #ebe5d9;
+  border: 1px solid rgba(235, 229, 217, 0.35);
+  animation: chn 4s ease-in-out infinite;
+}
+.is-pillars span:nth-child(2) { animation-delay: 1s; }
+.is-pillars span:nth-child(3) { animation-delay: 2s; }
+.is-pillars span:nth-child(4) { animation-delay: 3s; }
+@keyframes chn { 0%, 100% { background: transparent; } 12%, 28% { background: rgba(235, 229, 217, 0.18); } }
+.is-question {
+  border-left: 3px solid #6ea8d6; padding: 2px 0 2px 12px;
+  display: flex; flex-direction: column; gap: 4px;
+  animation: isIn 0.7s 0.6s both;
+}
+.is-question .is-tag { color: #8cc0ea; }
+.is-question p { font: italic 400 13px/1.45 var(--sans); color: #dfe8f2; }
+#intro-reopen {
+  position: fixed; z-index: 15; left: 20px; bottom: 78px;
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(8, 9, 14, 0.88); border: 1px solid #2d3042; color: #ddd;
+  font: 500 10px var(--mono); text-transform: uppercase; padding: 7px 11px; border-radius: 9px; cursor: pointer;
+  backdrop-filter: blur(10px);
+}
+#intro-reopen:hover { border-color: #7fbf8e; color: #fff; }
+@media (max-width: 960px) {
+  #intro-slide { left: 10px; right: 10px; top: 60px; bottom: calc(44vh + 66px); }
+  .is-cols { grid-template-columns: 1fr; }
+  .is-lead { font-size: 13.5px; }
+}

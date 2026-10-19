@@ -307,6 +307,18 @@ export interface BeatSpec {
   series: ChartSeries[];
   activeGeos: GeoId[];
   note: string;
+  intro?: BeatIntro;
+}
+
+// Texto narrativo de diapositiva (apertura, tesis y pregunta guía)
+export interface BeatIntro {
+  kicker: string;
+  lead: string;
+  shared: string;
+  chr: string;
+  fnd: string;
+  thesis: string;
+  question: string;
 }
 
 const fmtTime = (idx: number) => {
@@ -323,9 +335,9 @@ const RAW_BEATS: Omit<BeatSpec, 'index' | 'timeRange'>[] = [
   // ================= BLOQUE I: SUJETOS Y DELIMITACIÓN TERRITORIAL (Beats 0–4 | 00:00–02:30) =================
   {
     modelIndex: 0,
-    title: 'Apertura · Tesis Comparativa y Escala Intermedia',
-    planCode: 'PLANO 01 · ESCALA CONTINENTAL EUROPEA',
-    planTitle: 'Freetown Christiania (55.67°N) ⇄ Ecoaldea Findhorn (57.65°N)',
+    title: 'Apertura · ¿Cómo se sostienen dos comunidades autogestionadas?',
+    planCode: 'PLANO 01 · INTRODUCCIÓN Y TESIS',
+    planTitle: 'Freetown Christiania (Copenhague) ⇄ Findhorn (Moray, Escocia)',
     focus: 'dual',
     chrBox: BOUNDS.chr_all,
     fndBox: BOUNDS.fnd_all,
@@ -344,7 +356,20 @@ const RAW_BEATS: Omit<BeatSpec, 'index' | 'timeRange'>[] = [
       { label: 'Años de Continuidad', chr: 55, fnd: 64, unit: 'años' },
     ],
     activeGeos: ['batmands', 'thepark'],
-    note: 'Dos experimentos comunitarios europeos nacidos entre 1962 y 1971 con escala intermedia homologable (14 a 34 ha).',
+    note: 'La continuidad no depende solo de los ideales, sino de organizar recursos, transmitir conocimientos, mantener infraestructuras y gestionar dependencias externas.',
+    intro: {
+      kicker: 'Introducción · Tesis comparativa',
+      lead:
+        'Hoy vamos a comparar dos experiencias comunitarias que han buscado organizar la vida colectiva de una manera diferente a los modelos urbanos convencionales: Freetown Christiania, en Copenhague, Dinamarca, y Findhorn, una comunidad ecológica ubicada en Moray, Escocia.',
+      shared:
+        'Aunque ambas comparten ideas de cooperación, autogestión y sostenibilidad, surgieron en contextos diferentes.',
+      chr: 'Christiania nació de la ocupación de un antiguo recinto militar en una ciudad consolidada.',
+      fnd: 'Findhorn comenzó como una experiencia comunitaria en un entorno costero, donde sus habitantes buscaron desarrollar formas de vida más cercanas a los ciclos naturales.',
+      thesis:
+        'Nuestra tesis es que la continuidad de estas comunidades no depende únicamente de sus ideales, sino de su capacidad para organizar recursos económicos, transmitir conocimientos, mantener infraestructuras y gestionar sus dependencias del exterior.',
+      question:
+        'Por eso, más que preguntar si son completamente sostenibles, queremos entender cómo se sostienen, qué problemas enfrentan y cuáles son los límites de su autonomía.',
+    },
   },
   {
     modelIndex: 0,

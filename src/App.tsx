@@ -249,6 +249,7 @@ export default function App() {
   const [showDrawer, setShowDrawer] = useState(false);
   const [hidePanels, setHidePanels] = useState(false);
   const [hudTab, setHudTab] = useState<'mix' | 'chart' | 'evidence'>('mix');
+  const [showIntro, setShowIntro] = useState(true);
   const [overrides, setOverrides] = useState<CustomOverrides>(() => loadOverrides());
   const [zoomPhoto, setZoomPhoto] = useState<RealPhoto | null>(null);
   const [focusOverride, setFocusOverride] = useState<ViewFocus | null>(null);
@@ -545,7 +546,11 @@ export default function App() {
     gsap.set(Object.values(cards.current).filter(Boolean), { xPercent: -50, yPercent: -50 });
   }, []);
 
-  const lay = useMemo(() => layout(beat, W, H, m, hidePanels), [beat, W, H, m, hidePanels]);
+  const introOn = !!curBeat.intro && showIntro && !hidePanels;
+  useEffect(() => {
+    setShowIntro(true);
+  }, [beat]);
+  const lay = useMemo(() => layout(beat, W, H, m, hidePanels || introOn), [beat, W, H, m, hidePanels, introOn]);
 
   useLayoutEffect(() => {
     const first = !inited.current;
@@ -849,6 +854,102 @@ export default function App() {
             </button>
           </div>
         </div>
+
+        {/* Diapositiva narrativa (apertura / tesis / pregunta guía) */}
+        {curBeat.intro && !hidePanels && (
+          introOn ? (
+            <div id="intro-slide" onClick={(e) => e.stopPropagation()}>
+              <div className="is-card">
+                <div className="is-head">
+                  <span
+                    className="is-kicker"
+                    contentEditable={canEdit}
+                    suppressContentEditableWarning
+                    onBlur={(e) => updateBeat(beat, { intro: { ...curBeat.intro!, kicker: e.currentTarget.textContent || '' } })}
+                  >
+                    {curBeat.intro.kicker}
+                  </span>
+                  <button className="is-close" onClick={() => setShowIntro(false)} title="Ocultar texto y ver los planos 3D">
+                    <X size={13} /> Ver planos 3D
+                  </button>
+                </div>
+
+                <p
+                  className="is-lead"
+                  contentEditable={canEdit}
+                  suppressContentEditableWarning
+                  onBlur={(e) => updateBeat(beat, { intro: { ...curBeat.intro!, lead: e.currentTarget.textContent || '' } })}
+                >
+                  {curBeat.intro.lead}
+                </p>
+
+                <p
+                  className="is-shared"
+                  contentEditable={canEdit}
+                  suppressContentEditableWarning
+                  onBlur={(e) => updateBeat(beat, { intro: { ...curBeat.intro!, shared: e.currentTarget.textContent || '' } })}
+                >
+                  {curBeat.intro.shared}
+                </p>
+
+                <div className="is-cols">
+                  <div className="is-col chr">
+                    <span className="is-tag">🇩🇰 Freetown Christiania · Copenhague</span>
+                    <p
+                      contentEditable={canEdit}
+                      suppressContentEditableWarning
+                      onBlur={(e) => updateBeat(beat, { intro: { ...curBeat.intro!, chr: e.currentTarget.textContent || '' } })}
+                    >
+                      {curBeat.intro.chr}
+                    </p>
+                  </div>
+                  <div className="is-col fnd">
+                    <span className="is-tag">🏴󠁧󠁢󠁳󠁣󠁴󠁿 Findhorn · Moray, Escocia</span>
+                    <p
+                      contentEditable={canEdit}
+                      suppressContentEditableWarning
+                      onBlur={(e) => updateBeat(beat, { intro: { ...curBeat.intro!, fnd: e.currentTarget.textContent || '' } })}
+                    >
+                      {curBeat.intro.fnd}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="is-thesis">
+                  <span className="is-tag">Tesis</span>
+                  <p
+                    contentEditable={canEdit}
+                    suppressContentEditableWarning
+                    onBlur={(e) => updateBeat(beat, { intro: { ...curBeat.intro!, thesis: e.currentTarget.textContent || '' } })}
+                  >
+                    {curBeat.intro.thesis}
+                  </p>
+                  <div className="is-pillars">
+                    <span>Recursos económicos</span>
+                    <span>Transmisión de conocimientos</span>
+                    <span>Infraestructuras</span>
+                    <span>Dependencias del exterior</span>
+                  </div>
+                </div>
+
+                <div className="is-question">
+                  <span className="is-tag">Pregunta guía</span>
+                  <p
+                    contentEditable={canEdit}
+                    suppressContentEditableWarning
+                    onBlur={(e) => updateBeat(beat, { intro: { ...curBeat.intro!, question: e.currentTarget.textContent || '' } })}
+                  >
+                    {curBeat.intro.question}
+                  </p>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <button id="intro-reopen" onClick={(e) => { e.stopPropagation(); setShowIntro(true); }}>
+              <BookOpen size={13} /> Mostrar texto de la diapositiva
+            </button>
+          )
+        )}
 
         {/* Capa SVG de flujos dinámicos, anillos orbitales y anclajes 3D */}
         <svg id="links" ref={svgRef} width={W} height={H}>
