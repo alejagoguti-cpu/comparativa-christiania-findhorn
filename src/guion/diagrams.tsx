@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { C, useStage } from './kit';
+import { C, useStage, useStops } from './kit';
 import { Ico, ico } from './icons';
 const SI = (t: string, x: number, y: number, s: number, c: string) => { const I = ico(t); return <I x={x - s / 2} y={y - s / 2} width={s} height={s} color={c} strokeWidth={1.8} />; };
 
@@ -9,26 +9,44 @@ const D = (i: number, base = 0.15, step = 0.28) => ({ animationDelay: `${base + 
 /* ---------- HTML interactivo ---------- */
 const Arr = () => <svg viewBox="0 0 20 20"><path d="M3 10h13M11 5l5 5-5 5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>;
 function useSel() { const [s, set] = useState<number | null>(null); return [s, (i: number) => set((v) => (v === i ? null : i))] as const; }
+const offIn = (el: HTMLElement, root: HTMLElement) => { let x = 0, y = 0, e: HTMLElement | null = el; while (e && e !== root) { x += e.offsetLeft; y += e.offsetTop; e = e.offsetParent as HTMLElement | null; } return [x, y]; };
+/** cada clic acerca la cámara a un elemento del diagrama */
+function useFocusZoom(labels: string[], scale = 1.25) {
+  const cur = useStops(labels);
+  const ref = useRef<HTMLDivElement>(null);
+  const [st, setSt] = useState<React.CSSProperties>({});
+  useEffect(() => {
+    const el = ref.current; if (!el) return;
+    if (cur === null) { setSt({ transform: 'none' }); return; }
+    const it = el.querySelectorAll<HTMLElement>('[data-stop]')[cur]; if (!it) return;
+    const [x, y] = offIn(it, el); const cx = x + it.offsetWidth / 2, cy = y + it.offsetHeight / 2;
+    const W = el.offsetWidth, H = el.offsetHeight;
+    setSt({ transform: `translate(${W / 2 - cx}px, ${H / 2 - cy}px) scale(${scale})`, transformOrigin: `${cx}px ${cy}px` });
+    it.scrollIntoView?.({ block: 'nearest' });
+  }, [cur]); // eslint-disable-line
+  return { cur, ref, st };
+}
 
 export function Flow({ title, items }: { title?: string; items: { h: string; p?: string; c?: string }[] }) {
-  const [sel, tog] = useSel();
-  return <div className="dg">
+  const { cur, ref, st } = useFocusZoom(items.map((x) => x.h), 1.18);
+  return <div className={'dg zoomwrap' + (cur !== null ? ' focusing' : '')} ref={ref} style={st}>
     {title && <h3 className="po">{title}</h3>}
     <div className="flow">
-      {items.map((it, i) => <FlowItem key={i} i={i} it={it} last={i === items.length - 1} sel={sel === i} on={() => tog(i)} />)}
+      {items.map((it, i) => <FlowItem key={i} i={i} it={it} last={i === items.length - 1} sel={cur === i} on={() => {}} />)}
     </div>
   </div>;
 }
 function FlowItem({ it, i, last, sel, on }: any) {
   return <>
-    <div className={'card po' + (sel ? ' sel' : '')} onClick={on} style={{ ...D(i, 0.1, 0.35), ['--c' as any]: it.c ?? C.mute }}><span className="ico"><Ico t={it.h + ' ' + (it.p ?? '')} /></span><span className="k">{String(i + 1).padStart(2, '0')}</span><h4>{it.h}</h4>{it.p && <p>{it.p}</p>}</div>
+    <div data-stop className={'card po' + (sel ? ' sel' : '')} onClick={on} style={{ ...D(i, 0.1, 0.35), ['--c' as any]: it.c ?? C.mute }}><span className="ico"><Ico t={it.h + ' ' + (it.p ?? '')} /></span><span className="k">{String(i + 1).padStart(2, '0')}</span><h4>{it.h}</h4>{it.p && <p>{it.p}</p>}</div>
     {!last && <div className="ar po" style={D(i, 0.3, 0.35)}><Arr /></div>}
   </>;
 }
 
 export function Cols({ cols }: { cols: { h: string; c?: string; rows: [string, string][] }[] }) {
-  return <div className="dg"><div className="cols" style={{ ['--n' as any]: cols.length }}>
-    {cols.map((c, i) => <div key={i} className="col po" style={{ ...D(i, 0.1, 0.25), ['--c' as any]: c.c ?? C.mute }}>
+  const { cur, ref, st } = useFocusZoom(cols.map((x) => x.h), 1.12);
+  return <div className={'dg zoomwrap' + (cur !== null ? ' focusing' : '')} ref={ref} style={st}><div className="cols" style={{ ['--n' as any]: cols.length }}>
+    {cols.map((c, i) => <div key={i} data-stop className={'col po' + (cur === i ? ' sel' : '')} style={{ ...D(i, 0.1, 0.25), ['--c' as any]: c.c ?? C.mute }}>
       <h4>{c.h}</h4>
       {c.rows.map((r, k) => <div className="row po" key={k} style={D(k, 0.4 + i * 0.12, 0.3)}><span><i className="rico"><Ico t={r[0] + ' ' + r[1]} size={16} /></i>{r[0]}</span><span>{r[1]}</span></div>)}
     </div>)}
@@ -36,9 +54,10 @@ export function Cols({ cols }: { cols: { h: string; c?: string; rows: [string, s
 }
 
 export function Timeline({ events, phases, title }: { title?: string; events: { y: string; h: string; p?: string; c?: string }[]; phases?: { t: string; c: string; span: number }[] }) {
-  const [sel, tog] = useSel();
+  const { cur: sel, ref, st } = useFocusZoom(events.map((x) => x.y + ' · ' + x.h), 1.3);
+  const tog = (_i: number) => {};
   const pct = sel === null ? 100 : ((sel + 0.5) / events.length) * 100;
-  return <div className="dg">
+  return <div className={'dg zoomwrap' + (sel !== null ? ' focusing' : '')} ref={ref} style={st}>
     {title && <h3 className="po">{title}</h3>}
     <div className="tl" style={{ ['--n' as any]: events.length }}>
       {phases && <div className="ph" style={{ ['--ph' as any]: phases.map((p) => p.span + 'fr').join(' ') }}>
@@ -46,7 +65,7 @@ export function Timeline({ events, phases, title }: { title?: string; events: { 
       </div>}
       <div className="axis"><b style={{ width: pct + '%' }} /></div>
       <div className="evs">
-        {events.map((e, i) => <button key={i} className={'ev po' + (sel === i ? ' sel' : '')} onClick={() => tog(i)} style={{ ...D(i, 0.3, 0.35), ['--c' as any]: e.c ?? C.ink, opacity: sel !== null && sel !== i ? 0.4 : undefined }}>
+        {events.map((e, i) => <button key={i} data-stop className={'ev po' + (sel === i ? ' sel' : '')} onClick={() => tog(i)} style={{ ...D(i, 0.3, 0.35), ['--c' as any]: e.c ?? C.ink, opacity: sel !== null && sel !== i ? 0.4 : undefined }}>
           <span className="dot" /><span className="y"><Ico t={e.h + ' ' + (e.p ?? '')} size={18} /> {e.y}</span><h4>{e.h}</h4>{e.p && <p>{e.p}</p>}
         </button>)}
       </div>
@@ -55,11 +74,12 @@ export function Timeline({ events, phases, title }: { title?: string; events: { 
 }
 
 export function Chk({ title, items, n }: { title?: string; n?: number; items: { k?: string; h: string; p?: string; c?: string }[] }) {
-  const [sel, tog] = useSel();
-  return <div className="dg">
+  const { cur: sel, ref, st } = useFocusZoom(items.map((x) => x.h), 1.25);
+  const tog = (_i: number) => {};
+  return <div className={'dg zoomwrap' + (sel !== null ? ' focusing' : '')} ref={ref} style={st}>
     {title && <h3 className="po">{title}</h3>}
     <div className="grid" style={{ ['--n' as any]: n ?? items.length }}>
-      {items.map((it, i) => <div key={i} className={'card po' + (sel === i ? ' sel' : '')} onClick={() => tog(i)} style={{ ...D(i, 0.1, 0.25), ['--c' as any]: it.c ?? C.mute }}><span className="ico"><Ico t={it.h + ' ' + (it.p ?? '') + ' ' + (it.k ?? '')} /></span>{it.k && <span className="k">{it.k}</span>}<h4>{it.h}</h4>{it.p && <p>{it.p}</p>}</div>)}
+      {items.map((it, i) => <div key={i} data-stop className={'card po' + (sel === i ? ' sel' : '')} onClick={() => tog(i)} style={{ ...D(i, 0.1, 0.25), ['--c' as any]: it.c ?? C.mute }}><span className="ico"><Ico t={it.h + ' ' + (it.p ?? '') + ' ' + (it.k ?? '')} /></span>{it.k && <span className="k">{it.k}</span>}<h4>{it.h}</h4>{it.p && <p>{it.p}</p>}</div>)}
     </div>
   </div>;
 }
@@ -69,9 +89,10 @@ export function Big({ children, sub }: { children: ReactNode; sub?: ReactNode })
 }
 
 export function Qs({ items, title }: { title?: string; items: { k: string; q: string }[] }) {
-  const [sel, tog] = useSel();
-  return <div className="dg">{title && <h3 className="po">{title}</h3>}<div className="qs">
-    {items.map((it, i) => <div key={i} className={'card po' + (sel === i ? ' sel' : '')} onClick={() => tog(i)} style={{ ...D(i, 0.15, 0.4), ['--c' as any]: [C.chr, C.fnd, C.ken][i % 3] }}><span className="ico"><Ico t={it.q + ' ' + it.k} size={28} /></span><span className="k">{it.k}</span><h4>{it.q}</h4></div>)}
+  const { cur: sel, ref, st } = useFocusZoom(items.map((x) => x.q), 1.22);
+  const tog = (_i: number) => {};
+  return <div className={'dg zoomwrap' + (sel !== null ? ' focusing' : '')} ref={ref} style={st}>{title && <h3 className="po">{title}</h3>}<div className="qs">
+    {items.map((it, i) => <div key={i} data-stop className={'card po' + (sel === i ? ' sel' : '')} onClick={() => tog(i)} style={{ ...D(i, 0.15, 0.4), ['--c' as any]: [C.chr, C.fnd, C.ken][i % 3] }}><span className="ico"><Ico t={it.q + ' ' + it.k} size={28} /></span><span className="k">{it.k}</span><h4>{it.q}</h4></div>)}
   </div></div>;
 }
 
@@ -91,7 +112,9 @@ export function Cycle({ nodes, center, breaks = [], examples }: { nodes: { h: st
   const n = nodes.length;
   const pos = nodes.map((_, i) => { const a = -Math.PI / 2 + (i / n) * Math.PI * 2; return [cx + R * Math.cos(a), cy + R * Math.sin(a)]; });
   const fs = mobile ? 30 : 27;
-  return <svg className="vis" viewBox={`0 0 ${W} ${H}`}>
+  const cur = useStops(nodes.map((x) => x.h.replace(/\n/g, ' ')));
+  const cam = cur === null ? 'none' : `translate(${W / 2 - pos[cur][0] * 1.6}px, ${H / 2 - pos[cur][1] * 1.6}px) scale(1.6)`;
+  return <svg className="vis" viewBox={`0 0 ${W} ${H}`} style={{ overflow: 'hidden' }}><g style={{ transform: cam, transformOrigin: '0 0', transition: 'transform 1.1s cubic-bezier(.4,0,.2,1)' }}>
     <defs><marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill={C.ink} /></marker></defs>
     {pos.map((p, i) => {
       const a0 = -Math.PI / 2 + (i / n) * Math.PI * 2 + 0.33, a1 = -Math.PI / 2 + ((i + 1) / n) * Math.PI * 2 - 0.33;
@@ -118,7 +141,7 @@ export function Cycle({ nodes, center, breaks = [], examples }: { nodes: { h: st
       const a = -Math.PI / 2 + (e.at / n) * Math.PI * 2; const x = cx + (R + 175) * Math.cos(a), y = cy + (R + 120) * Math.sin(a);
       return <g key={'e' + i} className="po" style={D(i, 0.4, 0.5)}>{ML(Math.min(Math.max(x, 170), W - 170), y, e.text, { fs: 20, c: e.c, fw: 600 })}</g>;
     })}
-  </svg>;
+  </g></svg>;
 }
 
 /** Red de actores (radial). */
@@ -127,7 +150,9 @@ export function Net({ center, nodes, links = [] }: { center: { h: string; c: str
   const [W, H] = mobile ? [800, 1000] : [1600, 900];
   const cx = W / 2, cy = H / 2, rx = mobile ? 280 : 560, ry = mobile ? 390 : 330;
   const pos = nodes.map((_, i) => { const a = -Math.PI / 2 + (i / nodes.length) * Math.PI * 2; return [cx + rx * Math.cos(a), cy + ry * Math.sin(a)]; });
-  return <svg className="vis" viewBox={`0 0 ${W} ${H}`}>
+  const cur = useStops(nodes.map((x) => x.h));
+  const cam = cur === null ? 'none' : `translate(${W / 2 - pos[cur][0] * 1.7}px, ${H / 2 - pos[cur][1] * 1.7}px) scale(1.7)`;
+  return <svg className="vis" viewBox={`0 0 ${W} ${H}`} style={{ overflow: 'hidden' }}><g style={{ transform: cam, transformOrigin: '0 0', transition: 'transform 1.1s cubic-bezier(.4,0,.2,1)' }}>
     {pos.map((p, i) => <line key={'l' + i} x1={cx} y1={cy} x2={p[0]} y2={p[1]} stroke={C.line} strokeWidth={2} pathLength={1} className="dr" style={D(i, 0.3, 0.25)} />)}
     {links.map(([a, b, t], i) => <g key={'k' + i} className="po" style={D(i, 2.4, 0.5)}>
       <line x1={pos[a][0]} y1={pos[a][1]} x2={pos[b][0]} y2={pos[b][1]} stroke={C.chr} strokeWidth={3} strokeDasharray="8 7" />
@@ -141,7 +166,7 @@ export function Net({ center, nodes, links = [] }: { center: { h: string; c: str
       {T(p[0] + 18, p[1] - 10, nodes[i].h, { fs: mobile ? 23 : 22, fw: 600 })}
       {nodes[i].p && ML(p[0] + 18, p[1] + 20, nodes[i].p!, { fs: mobile ? 17 : 17, c: C.mute, fw: 400 })}
     </g>)}
-  </svg>;
+  </g></svg>;
 }
 
 /** Sankey cualitativo: fuentes -> nodo -> destinos (horizontal o vertical en celular). */

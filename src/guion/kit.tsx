@@ -7,7 +7,14 @@ export const C = {
 };
 
 /* ---------- contexto de escenario ---------- */
-export const StageCtx = createContext({ w: 1200, h: 700, mobile: false, tall: false });
+export const StageCtx = createContext<{ w: number; h: number; mobile: boolean; tall: boolean; sub: number; setStops: (labels: string[]) => void }>({ w: 1200, h: 700, mobile: false, tall: false, sub: 0, setStops: () => {} });
+/** Registra las paradas de cámara de una visual (cada clic acerca a una) y devuelve la parada actual: null = vista general. */
+export function useStops(labels: string[]) {
+  const { sub, setStops } = useContext(StageCtx);
+  const key = labels.join('|');
+  useEffect(() => { setStops(labels); }, [key]); // eslint-disable-line
+  return sub > 0 && sub <= labels.length ? sub - 1 : null;
+}
 export const useStage = () => useContext(StageCtx);
 
 /* ---------- datos OSM ---------- */
@@ -175,7 +182,23 @@ export function Anns({ anns, P, u, data, M, vb }: { anns: Ann[]; P: (p: Pt) => n
 }
 
 
-/** puntos de interés de las anotaciones (para el zoom automático) */
+/** paradas de cámara: cada etiqueta (o, si no hay, cada círculo o recuadro) */
+export function stopsOf(anns: Ann[]): { at: Pt; label: string; span?: [Pt, Pt] }[] {
+  const o: { at: Pt; label: string; span?: [Pt, Pt] }[] = [];
+  const shapes: { at: Pt; span?: [Pt, Pt]; idx: number }[] = [];
+  (anns as any[]).forEach((a, idx) => {
+    if (a.t === 'box') shapes.push({ at: [(a.a[0] + a.b[0]) / 2, (a.a[1] + a.b[1]) / 2], span: [a.a, a.b], idx });
+    else if (a.t === 'ring' || a.t === 'dot') shapes.push({ at: a.at, idx });
+    else if (a.t === 'tag') {
+      const sh = [...shapes].reverse().find((s) => idx - s.idx <= 2 && !(s as any).used);
+      if (sh) { (sh as any).used = true; o.push({ at: sh.at, span: sh.span, label: a.text.split('\n')[0] }); }
+      else o.push({ at: a.at, label: a.text.split('\n')[0] });
+    }
+  });
+  if (!o.length) for (const s of shapes) o.push({ at: s.at, span: s.span, label: '' });
+  return o;
+}
+/** puntos de interés de las anotaciones */
 export function focusPts(anns: Ann[]): Pt[] {
   const o: Pt[] = [];
   for (const a of anns) {
@@ -202,24 +225,19 @@ export function Photo({ img, anns = [], crop, mcrop, frac = true, auto = true }:
     const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
     return { k: k2, x: Math.min(vb[0] * (1 - k2), Math.max(vb[0] + vb[2] - (vb[0] + vb[2]) * k2, vb[0] + vb[2] / 2 - cx * k2)), y: Math.min(vb[1] * (1 - k2), Math.max(vb[1] + vb[3] - (vb[1] + vb[3]) * k2, vb[1] + vb[3] / 2 - cy * k2)) };
   };
+  const st = stopsOf(anns); const cur = useStops(st.map((s) => s.label));
   useEffect(() => {
-    const pts = focusPts(anns).map(P); if (!auto || pts.length === 0) return;
-    const t = setTimeout(() => { if (touched.current) return; const v = fit(pts, 1.9); if (v.k > 1.12) setZ({ ...v, slow: true }); }, 2900);
-    const t2 = setTimeout(() => { if (!touched.current) setZ((s) => ({ ...s, k: 1, x: 0, y: 0, slow: true })); }, 8200);
-    return () => { clearTimeout(t); clearTimeout(t2); };
-  }, []); // eslint-disable-line
-  const click = (e: React.MouseEvent<SVGSVGElement>) => {
-    e.stopPropagation(); touched.current = true;
-    if (z.k > 1.05) return setZ({ k: 1, x: 0, y: 0, slow: false });
-    const sv = e.currentTarget; const pt = sv.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY;
-    const m = sv.getScreenCTM(); if (!m) return; const q = pt.matrixTransform(m.inverse());
-    setZ({ ...fit([[q.x - vb[2] * 0.12, q.y - vb[3] * 0.12], [q.x + vb[2] * 0.12, q.y + vb[3] * 0.12]], 2.6), slow: false });
-  };
+    if (cur === null) { setZ({ k: 1, x: 0, y: 0, slow: true }); return; }
+    const [qx, qy] = P(st[cur].at); const sp = st[cur].span;
+    setZ({ ...(sp ? fit([P(sp[0]), P(sp[1])], 2.3) : fit([[qx - vb[2] * 0.16, qy - vb[3] * 0.16], [qx + vb[2] * 0.16, qy + vb[3] * 0.16]], 2.3)), slow: true });
+  }, [cur]); // eslint-disable-line
+  void touched; void auto;
   return <div className="fill">
-    <svg className={'vis zoomable' + (z.k > 1.05 ? ' z' : '')} viewBox={vb.join(' ')} preserveAspectRatio="xMidYMid meet" style={{ overflow: 'hidden' }} onClick={click}>
+    <svg className="vis" viewBox={vb.join(' ')} preserveAspectRatio="xMidYMid meet" style={{ overflow: 'hidden' }}>
       <g transform={`translate(${z.x} ${z.y}) scale(${z.k})`} style={{ transition: `transform ${z.slow ? 2.4 : 0.6}s cubic-bezier(.4,0,.2,1)` }}>
         <image href={`guion/img/${f}`} x={0} y={0} width={w} height={h} preserveAspectRatio="none" />
-        <Anns anns={anns} P={P} u={u} vb={vb} />
+        <Anns anns={anns} P={P} u={u / Math.pow(z.k, 0.75)} vb={vb} />
+        {cur !== null && (() => { const [qx, qy] = P(st[cur].at); return <g key={cur}><circle cx={qx} cy={qy} r={2.6 * u / z.k * 1.4} fill="none" stroke={C.hl} strokeWidth={0.35 * u / z.k * 1.4} className="pulse" /></g>; })()}
       </g>
     </svg>
   </div>;
@@ -276,19 +294,13 @@ function GeoMapInner({ site, bbox, base = 'sat', plan = false, anns = [], dim = 
   const [view, setView] = useState({ k: 1, x: 0, y: 0 });
   const [slow, setSlow] = useState(false);
   const touched = useRef(false);
+  const st = stopsOf(anns); const cur = useStops(st.map((s) => s.label));
   useEffect(() => {
-    const pts = focusPts(anns).map(P); if (pts.length === 0) return;
-    const t = setTimeout(() => {
-      if (touched.current) return;
-      const xs = pts.map((p) => p[0]), ys = pts.map((p) => p[1]);
-      const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
-      const k2 = Math.max(1, Math.min(1.7, 0.62 * Math.min(vw / Math.max(1, x1 - x0), vh / Math.max(1, y1 - y0))));
-      if (k2 < 1.15) return;
-      setSlow(true); setView(clampV({ k: k2, x: vw / 2 - ((x0 + x1) / 2) * k2, y: vh / 2 - ((y0 + y1) / 2) * k2 }));
-    }, 3200);
-    const t2 = setTimeout(() => { if (!touched.current) { setSlow(true); setView({ k: 1, x: 0, y: 0 }); } }, 9000);
-    return () => { clearTimeout(t); clearTimeout(t2); };
-  }, []); // eslint-disable-line
+    setSlow(true); touched.current = false;
+    if (cur === null) { setView({ k: 1, x: 0, y: 0 }); return; }
+    const [qx, qy] = P(st[cur].at); const k2 = 2.1;
+    setView(clampV({ k: k2, x: vw / 2 - qx * k2, y: vh / 2 - qy * k2 }));
+  }, [cur]); // eslint-disable-line
   const [show, setShow] = useState({ calles: true, anot: true });
   const [tip, setTip] = useState<null | { x: number; y: number; t: string; s: string }>(null);
   const drag = useRef<null | { x: number; y: number; vx: number; vy: number; moved: boolean }>(null);
@@ -339,7 +351,7 @@ function GeoMapInner({ site, bbox, base = 'sat', plan = false, anns = [], dim = 
     onWheel={(e) => { touched.current = true; setSlow(false); const [px, py] = svgPt(e.clientX, e.clientY); zoomAt(px, py, e.deltaY < 0 ? 1.25 : 0.8); }}
     onPointerDown={(e) => { touched.current = true; setSlow(false); drag.current = { x: e.clientX, y: e.clientY, vx: view.x, vy: view.y, moved: false }; }}
     onPointerMove={(e) => { const d2 = drag.current; if (!d2) return; const s = svgPt(0, 0)[2]; const dx = (e.clientX - d2.x) / s, dy = (e.clientY - d2.y) / s; if (Math.abs(dx) + Math.abs(dy) > 3) d2.moved = true; setView((v) => clampV({ ...v, x: d2.vx + dx, y: d2.vy + dy })); }}
-    onPointerUp={() => { drag.current = null; }} onPointerLeave={() => { drag.current = null; setTip(null); }}
+    onPointerUp={() => { if (drag.current?.moved) (window as any).__noClick = performance.now(); drag.current = null; }} onPointerLeave={() => { drag.current = null; setTip(null); }}
     onDoubleClick={() => setView({ k: 1, x: 0, y: 0 })}>
     <svg className="vis" viewBox={`0 0 ${vw} ${vh}`} preserveAspectRatio="xMidYMid meet" style={{ overflow: 'hidden', cursor: drag.current ? 'grabbing' : 'grab' }}>
       <g transform={`translate(${view.x} ${view.y}) scale(${view.k})`} style={{ transition: drag.current ? 'none' : slow ? 'transform 2.4s cubic-bezier(.4,0,.2,1)' : 'transform .25s ease' }}>
@@ -359,7 +371,8 @@ function GeoMapInner({ site, bbox, base = 'sat', plan = false, anns = [], dim = 
           {layers.roads.filter((f: any) => f[1]).map((f: any, i: number) => <path key={"hr" + i} className="feat-hit" d={toD(f[3], false)} fill="none" stroke="#000" strokeOpacity={0} style={{ pointerEvents: "stroke" }} strokeWidth={0.9 * u} onPointerMove={hover(f[1], (RT[f[2]] ?? f[2]) + ' · OSM')} onPointerLeave={() => setTip(null)} />)}
           {show.calles && layers.labels.map((l: any, i: number) => <text key={'lb' + i} x={l.x} y={l.y} transform={`rotate(${l.ang} ${l.x} ${l.y})`} textAnchor="middle" dy={0.28 * u} fontSize={0.62 * u / Math.sqrt(view.k)} fontFamily="JetBrains Mono, monospace" fontWeight={600} fill={onSat ? '#f3efe6' : '#bdb7aa'} paintOrder="stroke" stroke="rgba(0,0,0,.85)" strokeWidth={0.2 * u} style={{ pointerEvents: 'none' }}>{l.n}</text>)}
         </g>}
-        {show.anot && <g style={{ pointerEvents: "none" }}><Anns anns={anns} P={P} u={u} data={data} M={1 / metersPerPx} vb={[0, 0, vw, vh]} /></g>}
+        {show.anot && <g style={{ pointerEvents: "none" }}><Anns anns={anns} P={P} u={u / Math.pow(view.k, 0.75)} data={data} M={1 / metersPerPx} vb={[0, 0, vw, vh]} /></g>}
+        {cur !== null && (() => { const [qx, qy] = P(st[cur].at); return <circle key={cur} cx={qx} cy={qy} r={2.4 * u / view.k * 1.3} fill="none" stroke={C.hl} strokeWidth={0.32 * u / view.k * 1.3} className="pulse" style={{ pointerEvents: 'none' }} />; })()}
       </g>
     </svg>
     {tip && <div className="tip" style={{ left: tip.x, top: tip.y }}>{tip.t}<small>{tip.s}</small></div>}
