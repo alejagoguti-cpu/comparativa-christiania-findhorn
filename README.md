@@ -1,3 +1,19 @@
+# Christiania y Findhorn: cómo se sostiene una comunidad
+
+**Página principal (`index.html`)**: presentación por clics sincronizada con el guion (13 bloques, 81 pasos). No es un video: cada clic muestra lo que se está diciendo, con planos reales, fotografías con licencia abierta, figuras de estudios y diagramas animados.
+
+- Avanzar: clic en la imagen, flecha derecha, barra espaciadora o AvPág (sirve con control de presentación). Retroceder: flecha izquierda o RePág, o clic en el borde izquierdo de la imagen.
+- `N`: muestra u oculta el fragmento del guion del paso (apagado por defecto). `F`: pantalla completa.
+- Cada paso tiene su número en la URL (`#1` … `#81`).
+- En celular la imagen va arriba y el texto y los botones debajo, sin tapar la visualización.
+- La versión anterior (video de 40 planos) sigue disponible en `anterior.html`.
+
+Código: `src/guion/` (pasos en `steps.tsx`). Datos: `public/guion/data/` (OpenStreetMap, ODbL). Imágenes: `public/guion/img/` (autor y licencia en cada lámina). El fondo satelital (Esri World Imagery) se carga en línea.
+
+Compilar: `npm ci && npm run build` (genera `docs/` para GitHub Pages).
+
+---
+
 # Comparativa: Freetown Christiania vs. Ecoaldea Findhorn
 
 ### 1.1. Ficha Técnica, Delimitación Territorial y Caracterización Comparativa de los Casos
