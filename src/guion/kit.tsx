@@ -73,14 +73,14 @@ export const IMG: Record<string, [string, number, number, string]> = {
 /* ---------- anotaciones ---------- */
 export type Pt = [number, number];
 export type Ann =
-  | { t: 'line'; pts: Pt[]; c?: string; w?: number; d?: number; close?: boolean; fill?: string; dash?: boolean; smooth?: boolean }
-  | { t: 'ring'; at: Pt; r?: number; c?: string; d?: number; pulse?: boolean }
-  | { t: 'tag'; at: Pt; text: string; c?: string; d?: number; dx?: number; dy?: number; size?: number; dark?: boolean }
-  | { t: 'arrow'; from: Pt; to: Pt; c?: string; d?: number; bend?: number; w?: number; flow?: boolean }
-  | { t: 'box'; a: Pt; b: Pt; c?: string; d?: number; fill?: string }
-  | { t: 'dot'; at: Pt; c?: string; d?: number; r?: number }
-  | { t: 'feat'; kind: 'b' | 'r' | 'l' | 'w' | 'x'; id?: number | number[]; name?: string; cls?: string; c?: string; fill?: string; d?: number; w?: number; inside?: number }
-  | { t: 'text'; at: Pt; text: string; c?: string; d?: number; size?: number; anchor?: 'start' | 'middle' | 'end'; italic?: boolean }
+  | { t: 'line'; pts: Pt[]; c?: string; w?: number; d?: number; close?: boolean; fill?: string; dash?: boolean; smooth?: boolean; stop?: boolean }
+  | { t: 'ring'; at: Pt; r?: number; c?: string; d?: number; pulse?: boolean; stop?: boolean }
+  | { t: 'tag'; at: Pt; text: string; c?: string; d?: number; dx?: number; dy?: number; size?: number; dark?: boolean; stop?: boolean }
+  | { t: 'arrow'; from: Pt; to: Pt; c?: string; d?: number; bend?: number; w?: number; flow?: boolean; stop?: boolean }
+  | { t: 'box'; a: Pt; b: Pt; c?: string; d?: number; fill?: string; stop?: boolean }
+  | { t: 'dot'; at: Pt; c?: string; d?: number; r?: number; stop?: boolean }
+  | { t: 'feat'; kind: 'b' | 'r' | 'l' | 'w' | 'x'; id?: number | number[]; name?: string; cls?: string; c?: string; fill?: string; d?: number; w?: number; inside?: number; stop?: boolean }
+  | { t: 'text'; at: Pt; text: string; c?: string; d?: number; size?: number; anchor?: 'start' | 'middle' | 'end'; italic?: boolean; stop?: boolean }
   | { t: 'scale'; at: Pt; meters: number; d?: number };
 
 const pathOf = (pts: number[][], close?: boolean, smooth?: boolean) => {
@@ -108,58 +108,58 @@ export function Anns({ anns, P, u, data, M, vb }: { anns: Ann[]; P: (p: Pt) => n
       const pts = a.pts.map(P);
       out.push(<g key={i}>
         {a.fill && <path d={pathOf(pts, true, a.smooth)} fill={a.fill} className="fa" style={{ animationDelay: `${d + 0.6}s` }} />}
-        <path d={pathOf(pts, a.close, a.smooth)} pathLength={1} className="dr" style={st} fill="none" stroke={col} strokeWidth={(a.w ?? 0.32) * u} strokeLinecap="round" strokeLinejoin="round" strokeDasharray={a.dash ? undefined : undefined} />
+        <path d={pathOf(pts, a.close, a.smooth)} pathLength={1} className="dr" style={st} fill="none" stroke={col} strokeWidth={(a.w ?? 0.16) * u} strokeLinecap="round" strokeLinejoin="round" strokeDasharray={a.dash ? undefined : undefined} />
       </g>);
     } else if (a.t === 'ring') {
-      const [x, y] = P(a.at); const r = (a.r ?? 2.2) * u;
+      const [x, y] = P(a.at); const r = (a.r ?? 1.8) * u;
       out.push(<g key={i}>
-        <circle cx={x} cy={y} r={r} fill="none" stroke={col} strokeWidth={0.32 * u} pathLength={1} className="dr" style={st} />
+        <circle cx={x} cy={y} r={r} fill="none" stroke={col} strokeWidth={0.16 * u} pathLength={1} className="dr" style={st} />
         {a.pulse && <circle cx={x} cy={y} r={r * 0.28} fill={col} className="po pulse" style={st} />}
       </g>);
     } else if (a.t === 'dot') {
       const [x, y] = P(a.at);
-      out.push(<g key={i} className="po" style={st}><circle cx={x} cy={y} r={(a.r ?? 0.55) * u} fill={col} stroke="#fff" strokeWidth={0.18 * u} /></g>);
+      out.push(<g key={i} className="po" style={st}><circle cx={x} cy={y} r={(a.r ?? 0.38) * u} fill={col} stroke="#fff" strokeWidth={0.1 * u} /></g>);
     } else if (a.t === 'box') {
       const [x1, y1] = P(a.a), [x2, y2] = P(a.b);
       const pts = [[x1, y1], [x2, y1], [x2, y2], [x1, y2]];
       out.push(<g key={i}>
         {a.fill && <path d={pathOf(pts, true)} fill={a.fill} className="fa" style={{ animationDelay: `${d + 0.5}s` }} />}
-        <path d={pathOf(pts, true)} pathLength={1} className="dr" style={st} fill="none" stroke={col} strokeWidth={0.3 * u} />
+        <path d={pathOf(pts, true)} pathLength={1} className="dr" style={st} fill="none" stroke={col} strokeWidth={0.16 * u} />
       </g>);
     } else if (a.t === 'arrow') {
       const [x1, y1] = P(a.from), [x2, y2] = P(a.to);
       const bend = a.bend ?? 0.18;
       const mx = (x1 + x2) / 2 - (y2 - y1) * bend, my = (y1 + y2) / 2 + (x2 - x1) * bend;
-      const ang = Math.atan2(y2 - my, x2 - mx); const hl = 1.1 * u * (a.w ?? 1);
+      const ang = Math.atan2(y2 - my, x2 - mx); const hl = 0.8 * u * (a.w ?? 1);
       const h = `M${x2 - hl * Math.cos(ang - 0.45)} ${y2 - hl * Math.sin(ang - 0.45)}L${x2} ${y2}L${x2 - hl * Math.cos(ang + 0.45)} ${y2 - hl * Math.sin(ang + 0.45)}`;
-      out.push(<g key={i} fill="none" stroke={col} strokeWidth={0.3 * u * (a.w ?? 1)} strokeLinecap="round" strokeLinejoin="round">
+      out.push(<g key={i} fill="none" stroke={col} strokeWidth={0.16 * u * (a.w ?? 1)} strokeLinecap="round" strokeLinejoin="round">
         <path d={`M${x1} ${y1}Q${mx} ${my} ${x2} ${y2}`} pathLength={1} className={'dr'} style={st} />
-        {a.flow && <path d={`M${x1} ${y1}Q${mx} ${my} ${x2} ${y2}`} className="flowdash fa" stroke="#fff" strokeOpacity={0.7} strokeWidth={0.14 * u} style={{ animationDelay: `${d + 1.2}s, ${d + 1.2}s` }} />}
+        {a.flow && <path d={`M${x1} ${y1}Q${mx} ${my} ${x2} ${y2}`} className="flowdash fa" stroke="#fff" strokeOpacity={0.7} strokeWidth={0.1 * u} style={{ animationDelay: `${d + 1.2}s, ${d + 1.2}s` }} />}
         <path d={h} className="po" style={{ animationDelay: `${d + 1}s` }} />
       </g>);
     } else if (a.t === 'tag') {
-      const [x, y] = P(a.at); const fs = (a.size ?? 1) * 1.15 * u;
-      const lines = a.text.split('\n'); const w = Math.max(...lines.map((l) => tw(l, fs))) + fs * 1.1; const h = lines.length * fs * 1.25 + fs * 0.6;
+      const [x, y] = P(a.at); const fs = (a.size ?? 1) * 0.65 * u;
+      const lines = a.text.split('\n'); const w = Math.max(...lines.map((l) => tw(l, fs))) + fs * 0.8; const h = lines.length * fs * 1.25 + fs * 0.45;
       const dx = (a.dx ?? 0) * u, dy = (a.dy ?? 0) * u;
       let bx = x + dx - (dx < 0 ? w : dx > 0 ? 0 : w / 2), by = y + dy - (dy < 0 ? h : dy > 0 ? 0 : h / 2);
-      if (vb) { const m = 0.6 * u; bx = Math.min(Math.max(bx, vb[0] + m), vb[0] + vb[2] - w - m); by = Math.min(Math.max(by, vb[1] + m), vb[1] + vb[3] - h - m); }
+      if (vb) { const m = 0.4 * u; bx = Math.min(Math.max(bx, vb[0] + m), vb[0] + vb[2] - w - m); by = Math.min(Math.max(by, vb[1] + m), vb[1] + vb[3] - h - m); }
       const bg = 'rgba(8,8,7,.92)'; const fg = '#f3efe6';
       out.push(<g key={i} className="po" style={st}>
-        {(dx || dy) ? <line x1={x} y1={y} x2={Math.min(Math.max(x + dx, bx), bx + w)} y2={Math.min(Math.max(y + dy, by), by + h)} stroke={col} strokeWidth={0.2 * u} /> : null}
-        {(dx || dy) ? <circle cx={x} cy={y} r={0.45 * u} fill={col} stroke="#fff" strokeWidth={0.15 * u} /> : null}
-        <rect x={bx} y={by} width={w} height={h} fill={bg} stroke={col} strokeWidth={0.18 * u} rx={0.2 * u} />
-        <rect x={bx} y={by} width={0.35 * u} height={h} fill={col} />
-        {lines.map((l, k) => <text key={k} x={bx + fs * 0.7} y={by + fs * 0.3 + (k + 1) * fs * 1.2 - fs * 0.15} fontSize={fs} fontFamily="Inter Tight, Arial, sans-serif" fontWeight={k === 0 ? 600 : 400} fill={fg}>{l}</text>)}
+        {(dx || dy) ? <line x1={x} y1={y} x2={Math.min(Math.max(x + dx, bx), bx + w)} y2={Math.min(Math.max(y + dy, by), by + h)} stroke={col} strokeWidth={0.12 * u} /> : null}
+        {(dx || dy) ? <circle cx={x} cy={y} r={0.26 * u} fill={col} stroke="#fff" strokeWidth={0.08 * u} /> : null}
+        <rect x={bx} y={by} width={w} height={h} fill={bg} stroke={col} strokeWidth={0.12 * u} rx={0.15 * u} />
+        <rect x={bx} y={by} width={0.22 * u} height={h} fill={col} />
+        {lines.map((l, k) => <text key={k} x={bx + fs * 0.6} y={by + fs * 0.25 + (k + 1) * fs * 1.2 - fs * 0.15} fontSize={fs} fontFamily="Inter Tight, Arial, sans-serif" fontWeight={k === 0 ? 600 : 400} fill={fg}>{l}</text>)}
       </g>);
     } else if (a.t === 'text') {
-      const [x, y] = P(a.at); const fs = (a.size ?? 1) * 1.15 * u;
-      out.push(<text key={i} className="po" style={st} x={x} y={y} fontSize={fs} textAnchor={a.anchor ?? 'middle'} fill={a.c ?? C.ink} fontFamily="Inter Tight, Arial, sans-serif" fontWeight={700} paintOrder="stroke" stroke="rgba(0,0,0,.85)" strokeWidth={fs * 0.25}>{a.text}</text>);
+      const [x, y] = P(a.at); const fs = (a.size ?? 1) * 0.70 * u;
+      out.push(<text key={i} className="po" style={st} x={x} y={y} fontSize={fs} textAnchor={a.anchor ?? 'middle'} fill={a.c ?? C.ink} fontFamily="Inter Tight, Arial, sans-serif" fontWeight={600} paintOrder="stroke" stroke="rgba(0,0,0,.85)" strokeWidth={fs * 0.2}>{a.text}</text>);
     } else if (a.t === 'scale') {
-      const [x, y] = P(a.at); const px = (M ?? 1) * a.meters; const fs = 0.95 * u;
+      const [x, y] = P(a.at); const px = (M ?? 1) * a.meters; const fs = 0.58 * u;
       out.push(<g key={i} className="po" style={st}>
-        <rect x={x - 0.4 * u} y={y - 1.9 * u} width={px + 0.8 * u} height={2.6 * u} rx={0.3 * u} fill="rgba(8,8,7,.85)" />
-        <path d={`M${x} ${y - 0.4 * u}V${y}H${x + px}V${y - 0.4 * u}`} fill="none" stroke={C.ink} strokeWidth={0.18 * u} />
-        <text x={x} y={y - 0.75 * u} fontSize={fs} fontFamily="Inter Tight, Arial" fill={C.ink}>{a.meters >= 1000 ? a.meters / 1000 + ' km' : a.meters + ' m'}</text>
+        <rect x={x - 0.3 * u} y={y - 1.4 * u} width={px + 0.6 * u} height={1.9 * u} rx={0.2 * u} fill="rgba(8,8,7,.85)" />
+        <path d={`M${x} ${y - 0.3 * u}V${y}H${x + px}V${y - 0.3 * u}`} fill="none" stroke={C.ink} strokeWidth={0.12 * u} />
+        <text x={x} y={y - 0.5 * u} fontSize={fs} fontFamily="Inter Tight, Arial" fill={C.ink}>{a.meters >= 1000 ? a.meters / 1000 + ' km' : a.meters + ' m'}</text>
       </g>);
     } else if (a.t === 'feat' && data) {
       const list: any[] = data[a.kind] || [];
@@ -177,7 +177,7 @@ export function Anns({ anns, P, u, data, M, vb }: { anns: Ann[]; P: (p: Pt) => n
         const dd = pathOf(pts, isPoly);
         return <g key={k}>
           {(a.fill) && <path d={dd} fill={a.fill} className="fa" style={{ animationDelay: `${d + 0.5}s` }} />}
-          <path d={dd} pathLength={1} className="dr" style={st} fill="none" stroke={col} strokeWidth={(a.w ?? 0.3) * u} strokeLinejoin="round" strokeLinecap="round" />
+          <path d={dd} pathLength={1} className="dr" style={st} fill="none" stroke={col} strokeWidth={(a.w ?? 0.16) * u} strokeLinejoin="round" strokeLinecap="round" />
         </g>;
       })}</g>);
     }
@@ -186,20 +186,16 @@ export function Anns({ anns, P, u, data, M, vb }: { anns: Ann[]; P: (p: Pt) => n
 }
 
 
-/** paradas de cámara: cada etiqueta (o, si no hay, cada círculo o recuadro) */
+/** paradas de cámara: solo elementos explícitamente marcados con stop: true */
 export function stopsOf(anns: Ann[]): { at: Pt; label: string; span?: [Pt, Pt] }[] {
   const o: { at: Pt; label: string; span?: [Pt, Pt] }[] = [];
-  const shapes: { at: Pt; span?: [Pt, Pt]; idx: number }[] = [];
-  (anns as any[]).forEach((a, idx) => {
-    if (a.t === 'box') shapes.push({ at: [(a.a[0] + a.b[0]) / 2, (a.a[1] + a.b[1]) / 2], span: [a.a, a.b], idx });
-    else if (a.t === 'ring' || a.t === 'dot') shapes.push({ at: a.at, idx });
-    else if (a.t === 'tag') {
-      const sh = [...shapes].reverse().find((s) => idx - s.idx <= 2 && !(s as any).used);
-      if (sh) { (sh as any).used = true; o.push({ at: sh.at, span: sh.span, label: a.text.split('\n')[0] }); }
-      else o.push({ at: a.at, label: a.text.split('\n')[0] });
+  (anns as any[]).forEach((a) => {
+    if (a.stop) {
+      if (a.t === 'box') o.push({ at: [(a.a[0] + a.b[0]) / 2, (a.a[1] + a.b[1]) / 2], span: [a.a, a.b], label: (a as any).text?.split('\n')[0] || '' });
+      else if (a.t === 'ring' || a.t === 'dot') o.push({ at: a.at, label: (a as any).text?.split('\n')[0] || '' });
+      else if (a.t === 'tag') o.push({ at: a.at, label: a.text.split('\n')[0] });
     }
   });
-  if (!o.length) for (const s of shapes) o.push({ at: s.at, span: s.span, label: '' });
   return o;
 }
 /** puntos de interés de las anotaciones */
@@ -239,9 +235,8 @@ export function Photo({ img, anns = [], crop, mcrop, frac = true, auto = true }:
   return <div className="fill">
     <svg className="vis" viewBox={vb.join(' ')} preserveAspectRatio="xMidYMid meet" style={{ overflow: 'hidden' }}>
       <g transform={`translate(${z.x} ${z.y}) scale(${z.k})`} style={{ transition: `transform ${z.slow ? 2.8 : 0.8}s cubic-bezier(.33,0,.2,1)` }}>
-        <image href={`guion/img/${f}`} x={0} y={0} width={w} height={h} preserveAspectRatio="none" />
+        <image href={`guion/img/${f}`} x={0} y={0} width={w} height={h} preserveAspectRatio="none" style={{ imageRendering: '-webkit-optimize-contrast' }} />
         <Anns anns={anns} P={P} u={u / Math.pow(z.k, 0.75)} vb={vb} />
-        {cur !== null && (() => { const [qx, qy] = P(st[cur].at); return <g key={cur}><circle cx={qx} cy={qy} r={2.6 * u / z.k * 1.4} fill="none" stroke={C.hl} strokeWidth={0.35 * u / z.k * 1.4} className="pulse" /></g>; })()}
       </g>
     </svg>
   </div>;
@@ -283,8 +278,9 @@ function GeoMapInner({ site, bbox, base = 'sat', plan = false, anns = [], dim = 
   const { mobile } = useStage();
   const data = useData(site);
   const [w0, s0, e0, n0] = bbox;
-  const pxw = Math.max(SW, 300) * (window.devicePixelRatio > 1 ? 1.4 : 1);
-  let z = Math.floor(Math.log2((pxw * 360) / (256 * (e0 - w0) * 1.15)));
+  const dpr = Math.max(1, typeof window !== 'undefined' ? (window.devicePixelRatio || 1) : 1);
+  // Cálculo de zoom nítido para evitar mapas borrosos
+  let z = Math.round(Math.log2((SW * dpr * 360) / (256 * (e0 - w0))));
   z = Math.max(2, Math.min(base === 'gris' ? 16 : 19, z));
   const X0 = mx(w0, z), X1 = mx(e0, z), Y0 = my(n0, z), Y1 = my(s0, z);
   const cx = (X0 + X1) / 2, cy = (Y0 + Y1) / 2;
@@ -292,7 +288,7 @@ function GeoMapInner({ site, bbox, base = 'sat', plan = false, anns = [], dim = 
   if (vw / vh > asp) vh = vw / asp; else vw = vh * asp;
   const ox = cx - vw / 2, oy = cy - vh / 2;
   const P = (p: Pt) => [mx(p[0], z) - ox, my(p[1], z) - oy];
-  const u = (vw / 62) * (mobile ? 1.5 : 1);
+  const u = (vw / 62) * (mobile ? 1.4 : 1);
   const metersPerPx = (40075016.7 * Math.cos(((s0 + n0) / 2) * Math.PI / 180)) / (256 * 2 ** z);
   // vista interactiva (zoom y desplazamiento)
   const [view, setView] = useState({ k: 1, x: 0, y: 0 });
@@ -360,23 +356,30 @@ function GeoMapInner({ site, bbox, base = 'sat', plan = false, anns = [], dim = 
     <svg className="vis" viewBox={`0 0 ${vw} ${vh}`} preserveAspectRatio="xMidYMid meet" style={{ overflow: 'hidden', cursor: drag.current ? 'grabbing' : 'grab' }}>
       <g transform={`translate(${view.x} ${view.y}) scale(${view.k})`} style={{ transition: drag.current ? 'none' : slow ? 'transform 2.8s cubic-bezier(.33,0,.2,1)' : 'transform .25s ease' }}>
         <rect x={0} y={0} width={vw} height={vh} fill="#11110f" />
-        {tiles.map(([x, y]) => <image key={x + '_' + y} href={TL.replace('{z}', String(z)).replace('{x}', String(x)).replace('{y}', String(y))} x={x * 256 - ox} y={y * 256 - oy} width={256.6} height={256.6} />)}
+        {tiles.map(([x, y]) => <image key={x + '_' + y} href={TL.replace('{z}', String(z)).replace('{x}', String(x)).replace('{y}', String(y))} x={x * 256 - ox} y={y * 256 - oy} width={256.6} height={256.6} style={{ imageRendering: '-webkit-optimize-contrast' }} />)}
         {dim > 0 && <rect x={0} y={0} width={vw} height={vh} fill="#000" opacity={dim} />}
         {layers && <g>
           {plan && <>
             <path d={layers.green} fill={onSat ? 'none' : 'rgba(79,179,143,.12)'} />
             <path d={layers.water} fill={onSat ? 'rgba(91,155,224,.18)' : 'rgba(91,155,224,.22)'} />
-            {layers.ww.map((f: any, i: number) => <path key={'w' + i} d={toD(f[3], false)} fill="none" stroke="rgba(120,180,240,.75)" strokeWidth={0.25 * u} />)}
+            {layers.ww.map((f: any, i: number) => <path key={'w' + i} d={toD(f[3], false)} fill="none" stroke="rgba(120,180,240,.75)" strokeWidth={0.16 * u} />)}
           </>}
-          {show.calles && layers.roads.map((f: any, i: number) => { const major = /trunk|primary|secondary|tertiary/.test(f[2]); return <path key={i} d={toD(f[3], false)} fill="none" stroke={onSat ? (major ? 'rgba(255,255,255,.55)' : 'rgba(255,255,255,.28)') : major ? '#7d786d' : '#4a4740'} strokeWidth={(major ? 0.34 : 0.15) * u} />; })}
-          {plan && <path d={layers.bld.map((f: any) => toD(f[3], true)).join('')} fill={onSat ? 'rgba(255,255,255,.14)' : '#3d3a33'} stroke={onSat ? 'rgba(255,255,255,.4)' : '#57534a'} strokeWidth={0.05 * u} />}
+          {show.calles && layers.roads.map((f: any, i: number) => {
+            const major = /trunk|primary|secondary|tertiary/.test(f[2]);
+            return <path key={i} d={toD(f[3], false)} fill="none"
+              stroke={onSat ? (major ? 'rgba(255,245,220,.20)' : 'rgba(255,245,220,.08)') : major ? '#7d786d' : '#4a4740'}
+              strokeWidth={(major ? 0.10 : 0.05) * u} />;
+          })}
+          {plan && <path d={layers.bld.map((f: any) => toD(f[3], true)).join('')}
+            fill={onSat ? 'rgba(255,255,255,.06)' : '#3d3a33'}
+            stroke={onSat ? 'rgba(255,255,255,.15)' : '#57534a'}
+            strokeWidth={0.02 * u} />}
           {/* zonas sensibles al cursor */}
           {layers.bld.filter((f: any) => f[1]).map((f: any, i: number) => <path key={"hb" + i} className="feat-hit" d={toD(f[3], true)} fill="#000" fillOpacity={0} stroke="none" style={{ pointerEvents: "all" }} onPointerMove={hover(f[1], 'edificio · OSM')} onPointerLeave={() => setTip(null)} />)}
-          {layers.roads.filter((f: any) => f[1]).map((f: any, i: number) => <path key={"hr" + i} className="feat-hit" d={toD(f[3], false)} fill="none" stroke="#000" strokeOpacity={0} style={{ pointerEvents: "stroke" }} strokeWidth={0.9 * u} onPointerMove={hover(f[1], (RT[f[2]] ?? f[2]) + ' · OSM')} onPointerLeave={() => setTip(null)} />)}
-          {show.calles && layers.labels.map((l: any, i: number) => <text key={'lb' + i} x={l.x} y={l.y} transform={`rotate(${l.ang} ${l.x} ${l.y})`} textAnchor="middle" dy={0.28 * u} fontSize={0.62 * u / Math.sqrt(view.k)} fontFamily="JetBrains Mono, monospace" fontWeight={600} fill={onSat ? '#f3efe6' : '#bdb7aa'} paintOrder="stroke" stroke="rgba(0,0,0,.85)" strokeWidth={0.2 * u} style={{ pointerEvents: 'none' }}>{l.n}</text>)}
+          {layers.roads.filter((f: any) => f[1]).map((f: any, i: number) => <path key={"hr" + i} className="feat-hit" d={toD(f[3], false)} fill="none" stroke="#000" strokeOpacity={0} style={{ pointerEvents: "stroke" }} strokeWidth={0.6 * u} onPointerMove={hover(f[1], (RT[f[2]] ?? f[2]) + ' · OSM')} onPointerLeave={() => setTip(null)} />)}
+          {show.calles && layers.labels.map((l: any, i: number) => <text key={'lb' + i} x={l.x} y={l.y} transform={`rotate(${l.ang} ${l.x} ${l.y})`} textAnchor="middle" dy={0.18 * u} fontSize={0.34 * u / Math.sqrt(view.k)} fontFamily="JetBrains Mono, monospace" fontWeight={600} fill={onSat ? '#e8e4da' : '#bdb7aa'} paintOrder="stroke" stroke="rgba(0,0,0,.85)" strokeWidth={0.12 * u} style={{ pointerEvents: 'none' }}>{l.n}</text>)}
         </g>}
         {show.anot && <g className="anns" style={{ pointerEvents: "none" }}><Anns anns={anns} P={P} u={u / Math.pow(view.k, 0.75)} data={data} M={1 / metersPerPx} vb={[0, 0, vw, vh]} /></g>}
-        {cur !== null && (() => { const [qx, qy] = P(st[cur].at); return <circle key={cur} cx={qx} cy={qy} r={2.4 * u / view.k * 1.3} fill="none" stroke={C.hl} strokeWidth={0.32 * u / view.k * 1.3} className="pulse" style={{ pointerEvents: 'none' }} />; })()}
       </g>
     </svg>
     {tip && <div className="tip" style={{ left: tip.x, top: tip.y }}>{tip.t}<small>{tip.s}</small></div>}

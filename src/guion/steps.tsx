@@ -72,7 +72,7 @@ export const STEPS: Step[] = [
     v: () => <GeoMap site="christiania" bbox={CPH_BOX} base="sat" dim={0.25} anns={[
       chrBoundary(0.3),
       { t: 'tag', at: [12.6095, 55.6762], text: 'Christiania · 34 ha', c: C.chr, dx: 4, dy: -4, d: 1.4 },
-      { t: 'tag', at: [12.585, 55.676], text: 'Centro de Copenhague', c: '#fff', d: 2, dark: true },
+      { t: 'text', at: [12.585, 55.676], text: 'Centro de Copenhague', c: 'rgba(255,255,255,0.7)', d: 2 },
       { t: 'scale', at: [12.557, 55.6625], meters: 1000, d: 2.4 },
     ]} />,
     src: sat,
@@ -81,10 +81,10 @@ export const STEPS: Step[] = [
   {
     b: 0, t: 'Findhorn comienza en un entorno costero', d: 'La península entre la bahía de Findhorn y el estuario de Moray: suelo arenoso, dunas y baja densidad.',
     v: () => <GeoMap site="findhorn" bbox={FND_PEN} base="sat" dim={0.15} anns={[
-      { t: 'ring', at: FND, r: 2.4, c: C.fnd, pulse: true, d: 0.3 },
-      { t: 'tag', at: FND, text: 'The Park · ecoaldea', c: C.fnd, dx: 4, dy: 4, d: 0.6 },
-      { t: 'tag', at: [-3.605, 57.645], text: 'Bahía de Findhorn', c: '#fff', d: 1.2, dark: true },
-      { t: 'tag', at: [-3.575, 57.672], text: 'Estuario de Moray (mar del Norte)', c: '#fff', d: 1.6, dark: true },
+      { t: 'ring', at: FND, r: 1.8, c: C.fnd, pulse: true, d: 0.3 },
+      { t: 'tag', at: FND, text: 'The Park · ecoaldea de Findhorn', c: C.fnd, dx: 4, dy: 4, d: 0.6 },
+      { t: 'text', at: [-3.605, 57.645], text: 'Bahía de Findhorn', c: 'rgba(255,255,255,0.65)', d: 1.2 },
+      { t: 'text', at: [-3.575, 57.672], text: 'Estuario de Moray', c: 'rgba(255,255,255,0.65)', d: 1.6 },
       { t: 'scale', at: [-3.655, 57.631], meters: 1000, d: 2 },
     ]} />,
     src: sat,
@@ -104,12 +104,11 @@ export const STEPS: Step[] = [
     b: 0, t: 'No preguntamos si son sostenibles, sino cómo se sostienen', d: '',
     v: () => <Ask title="Tres preguntas que guían la comparación" items={[
       { q: '¿Cómo se sostienen?', c: C.fnd, a: 'Con acuerdos sobre el suelo, aportes a una caja común e infraestructura que ellos mismos mantienen.', v: () => <Photo img="chr_plano_subareas_2018" crop={[250, 20, 1500, 1000]} anns={[
-        { t: 'line', pts: SUBI, close: true, c: C.fnd, w: 0.6, d: 0.3, fill: 'rgba(79,179,143,.22)' },
+        { t: 'line', pts: SUBI, close: true, c: C.fnd, w: 0.5, d: 0.3, fill: 'rgba(79,179,143,.22)' },
         { t: 'tag', at: k(700, 380), text: 'Suelo comprado por la Fundación\n(acuerdo de 2012)', c: C.fnd, dx: 10, dy: 8, d: 1 },
       ]} /> },
       { q: '¿Qué problemas enfrentan?', c: C.chr, a: 'Comercio ilegal y violencia en Christiania; crisis financiera e incendio en Findhorn.', v: () => <Photo img="chr_pusher2024" crop={[0, 600, 1600, 1531]} anns={[
-        { t: 'line', pts: [[0.36, 0.62], [0.72, 0.6], [0.86, 0.97], [0.3, 0.97]], close: true, c: C.chr, w: 0.6, d: 0.4 },
-        { t: 'tag', at: [0.55, 0.72], text: 'Pusher Street, abril de 2024', c: C.chr, dx: 6, dy: -4, d: 1.2 },
+        { t: 'tag', at: [0.55, 0.75], text: 'Pusher Street (abril 2024)', c: C.chr, dx: 4, dy: -4, d: 1.0 },
       ]} /> },
       { q: '¿Cuáles son los límites de su autonomía?', c: C.ken, a: 'Dependen de redes públicas, del Estado y del mercado inmobiliario que los rodea.', v: () => <GeoMap site="christiania" bbox={[12.578, 55.664, 12.628, 55.687]} base="sat" dim={0.35} anns={[
         chrBoundary(0.2),
@@ -129,9 +128,9 @@ export const STEPS: Step[] = [
   {
     b: 1, t: 'Un territorio militar: la fortificación de Christianshavn', d: 'Plano de 1751. Las murallas y bastiones del siglo XVII forman hoy el borde de Christiania.',
     v: () => <Photo img="chr_gedde1751" mcrop={[700, 700, 1900, 1148]} anns={[
-      { t: 'line', pts: [g(470, 690), g(540, 735), g(600, 760), g(660, 770), g(720, 775), g(790, 772), g(860, 765), g(930, 740), g(1000, 705), g(1070, 665), g(1130, 625), g(1190, 590), g(1240, 560)], c: C.chr, w: 0.55, smooth: true, d: 0.4 },
-      { t: 'tag', at: g(860, 765), text: 'Muralla y bastiones (s. XVII)\nhoy dentro de Christiania', c: C.chr, dx: -2, dy: -14, d: 1.6 },
-      { t: 'tag', at: g(360, 838), text: 'Amager', c: C.ink, d: 2.2 },
+      { t: 'line', pts: [g(470, 690), g(540, 735), g(600, 760), g(660, 770), g(720, 775), g(790, 772), g(860, 765), g(930, 740), g(1000, 705), g(1070, 665), g(1130, 625), g(1190, 590), g(1240, 560)], c: C.chr, w: 0.45, smooth: true, d: 0.4 },
+      { t: 'tag', at: g(860, 765), text: 'Muralla y bastiones (s. XVII)\nhoy dentro de Christiania', c: C.chr, dx: -2, dy: -12, d: 1.6 },
+      { t: 'text', at: g(360, 838), text: 'Amager', c: C.ink, d: 2.2 },
     ]} />,
     src: 'S. C. Gedde, Christianshavn (1751), Det Kgl. Bibliotek vía Wikimedia Commons, dominio público.',
     nota: 'Christiania se originó en 1971, cuando habitantes de Copenhague ocuparon unos antiguos terrenos militares abandonados',
@@ -139,8 +138,8 @@ export const STEPS: Step[] = [
   {
     b: 1, t: '1971: del cuartel abandonado a una comunidad con reglas propias', d: 'Cuartel de Bådsmandsstræde hacia 1840 y el letrero de Christiania en octubre de 1971.',
     v: () => <Pair items={[
-      { img: 'chr_kaserne1840', cap: <><b>Bådsmandsstrædes Kaserne, c. 1840.</b> Dominio público.</>, anns: [{ t: 'box', a: [0.3, 0.12], b: [0.64, 0.82], c: C.chr, d: 0.8 }, { t: 'tag', at: [0.47, 0.12], text: 'Cuartel', c: C.chr, dy: -3, d: 1.6 }] },
-      { img: 'chr_1971', cap: <><b>Letrero de Christiania, octubre de 1971.</b> Utrecht1950, CC BY-SA 4.0.</>, anns: [{ t: 'ring', at: [0.12, 0.27], r: 4, c: C.chr, d: 1.2 }, { t: 'tag', at: [0.6, 0.5], text: 'Edificio militar reutilizado', c: C.chr, dy: 6, d: 2 }] },
+      { img: 'chr_kaserne1840', cap: <><b>Bådsmandsstrædes Kaserne, c. 1840.</b> Dominio público.</>, anns: [{ t: 'tag', at: [0.47, 0.22], text: 'Cuartel militar original', c: C.chr, dy: -2, d: 1.0 }] },
+      { img: 'chr_1971', cap: <><b>Letrero de Christiania, octubre de 1971.</b> Utrecht1950, CC BY-SA 4.0.</>, anns: [{ t: 'tag', at: [0.35, 0.28], text: 'Entrada y letrero de Christiania (1971)', c: C.chr, dy: -2, d: 1.2 }] },
     ]} />,
     nota: '…y comenzaron a desarrollar una comunidad con reglas propias.',
   },
@@ -163,7 +162,7 @@ export const STEPS: Step[] = [
   {
     b: 1, t: 'Reutilización y autoconstrucción, vistas en el lugar', d: '',
     v: () => <Pair items={[
-      { img: 'chr_grahal', cap: <><b>Den Grå Hal:</b> antigua nave militar convertida en espacio cultural. Jens Cederskjold, CC BY 3.0.</>, anns: [{ t: 'box', a: [0.06, 0.24], b: [0.72, 0.66], c: C.hl, d: 0.8 }] },
+      { img: 'chr_grahal', cap: <><b>Den Grå Hal:</b> antigua nave militar convertida en espacio cultural. Jens Cederskjold, CC BY 3.0.</> },
       { img: 'chr_stadsgraven_casas', cap: <><b>Casas autoconstruidas frente al foso de Stadsgraven.</b> Stig Nygaard, CC BY 2.0.</> },
     ]} />,
     nota: '(Ejemplos: espacios culturales en edificios militares y viviendas autoconstruidas.)',
@@ -187,9 +186,9 @@ export const STEPS: Step[] = [
   {
     b: 1, t: 'Findhorn, 1962: Eileen y Peter Caddy y Dorothy Maclean', d: 'La caravana original sigue en The Park; el mapa marca su ubicación según la geolocalización de la foto.',
     v: () => <div className="pair" style={{ ['--n' as any]: 2 }}>
-      <figure className="po"><div style={{ minHeight: 0 }}><Photo img="fnd_caravana" anns={[{ t: 'ring', at: [0.33, 0.45], r: 7, c: C.fnd, d: 0.6 }, { t: 'tag', at: [0.33, 0.2], text: 'Caravana original', c: C.fnd, dy: -2, d: 1.3 }]} /></div><figcaption><b>La caravana original (1962).</b> Anne Burgess, CC BY-SA 2.0.</figcaption></figure>
+      <figure className="po"><div style={{ minHeight: 0 }}><Photo img="fnd_caravana" anns={[{ t: 'tag', at: [0.45, 0.35], text: 'Caravana original (1962)', c: C.fnd, dy: -2, d: 0.8 }]} /></div><figcaption><b>La caravana original (1962).</b> Anne Burgess, CC BY-SA 2.0.</figcaption></figure>
       <figure className="po" style={{ animationDelay: '.3s' }}><div style={{ minHeight: 0 }}><GeoMap site="findhorn" bbox={[-3.5990, 57.6495, -3.5860, 57.6555]} base="sat" plan dim={0.15} anns={[
-        { t: 'ring', at: CARAVAN, r: 1.8, c: C.fnd, pulse: true, d: 0.8 },
+        { t: 'ring', at: CARAVAN, r: 1.6, c: C.fnd, pulse: true, d: 0.8 },
         { t: 'tag', at: CARAVAN, text: '1962 · punto de partida', c: C.fnd, dx: 4, dy: -4, d: 1.4 },
         { t: 'scale', at: [-3.5985, 57.6498], meters: 100, d: 1.8 },
       ]} /></div><figcaption><b>Ubicación en The Park.</b> {sat}</figcaption></figure>
@@ -201,7 +200,7 @@ export const STEPS: Step[] = [
     b: 1, t: 'Suelo arenoso y construcción de menor impacto', d: 'La comunidad experimentó con cultivo orgánico, cooperación y técnicas como las casas de barricas de whisky.',
     v: () => <Pair items={[
       { img: 'fnd_dunas', cap: <><b>Dunas junto a la bahía de Findhorn.</b> valenta, CC BY-SA 2.0.</> },
-      { img: 'fnd_barril_original', cap: <><b>La primera casa de barril (duelas de barricas recicladas).</b> Julian Paren, CC BY-SA 2.0.</>, anns: [{ t: 'box', a: [0.24, 0.15], b: [0.74, 0.58], c: C.fnd, d: 0.9 }, { t: 'tag', at: [0.49, 0.15], text: 'Material reutilizado', c: C.fnd, dy: -3, d: 1.7 }] },
+      { img: 'fnd_barril_original', cap: <><b>La primera casa de barril (duelas de barricas recicladas).</b> Julian Paren, CC BY-SA 2.0.</> },
     ]} />,
     nota: 'La experiencia se desarrolló en un entorno costero de suelo arenoso, donde la comunidad experimentó con el cultivo orgánico, la cooperación y formas de construcción de menor impacto ambiental.',
   },
@@ -343,7 +342,7 @@ export const STEPS: Step[] = [
   {
     b: 3, t: '6 de abril de 2024: se levantan los adoquines', d: 'Un gesto para recuperar el espacio frente al comercio ilegal y la violencia.',
     v: () => <Pair items={[
-      { img: 'chr_pusher2024', cap: <><b>Pusher Street, abril de 2024.</b> Penguin, CC BY-SA 4.0.</>, anns: [{ t: 'line', pts: [[0.36, 0.62], [0.72, 0.6], [0.86, 0.97], [0.3, 0.97]], close: true, c: C.hl, w: 0.6, d: 0.6 }, { t: 'tag', at: [0.55, 0.72], text: 'Calle excavada', c: C.hl, dx: 6, dy: -4, d: 1.5 }, { t: 'box', a: [0.15, 0.1], b: [0.7, 0.3], c: C.chr, d: 2 }, { t: 'tag', at: [0.42, 0.3], text: 'Aviso de la comunidad', c: C.chr, dy: 4, d: 2.6 }] },
+      { img: 'chr_pusher2024', cap: <><b>Pusher Street, abril de 2024.</b> Penguin, CC BY-SA 4.0.</>, anns: [{ t: 'tag', at: [0.55, 0.72], text: 'Pusher Street (adoquines levantados)', c: C.hl, dy: -4, d: 1.2 }] },
       { img: 'chr_entrada', cap: <><b>Entrada principal de Christiania.</b> Franklin Heijnen, CC BY-SA 2.0.</> },
     ]} />,
     src: 'The Copenhagen Post (6.4.2024); AP (5.4.2024).',
@@ -365,11 +364,11 @@ export const STEPS: Step[] = [
   {
     b: 3, t: '12 de abril de 2021: el incendio del Sanctuary y el Community Centre', d: 'Dos espacios centrales de la vida comunitaria se perdieron en un incendio provocado.',
     v: () => <div className="pair" style={{ ['--n' as any]: 2 }}>
-      <figure className="po"><div style={{ minHeight: 0 }}><Photo img="fnd_communitycentre" anns={[{ t: 'box', a: [0.28, 0.2], b: [0.95, 0.72], c: C.chr, d: 0.8 }, { t: 'tag', at: [0.6, 0.2], text: 'Community Centre (antes del incendio)', c: C.chr, dy: -3, d: 1.6 }]} /></div><figcaption><b>Community Centre.</b> Anne Burgess, CC BY-SA 2.0.</figcaption></figure>
+      <figure className="po"><div style={{ minHeight: 0 }}><Photo img="fnd_communitycentre" anns={[{ t: 'tag', at: [0.6, 0.35], text: 'Community Centre (antes del incendio)', c: C.chr, dy: -3, d: 1.2 }]} /></div><figcaption><b>Community Centre.</b> Anne Burgess, CC BY-SA 2.0.</figcaption></figure>
       <figure className="po" style={{ animationDelay: '.3s' }}><div style={{ minHeight: 0 }}><GeoMap site="findhorn" bbox={[-3.5955, 57.6505, -3.5895, 57.6540]} base="sat" plan dim={0.2} anns={[
-        { t: 'feat', kind: 'b', id: 1225211284, c: C.chr, fill: 'rgba(196,71,43,.6)', w: 0.5, d: 0.9 },
+        { t: 'feat', kind: 'b', id: 1225211284, c: C.chr, fill: 'rgba(196,71,43,.6)', w: 0.4, d: 0.9 },
         { t: 'tag', at: [-3.5928, 57.6522], text: 'Community Centre', c: C.chr, dx: 4, dy: -4, d: 1.8 },
-        { t: 'ring', at: CARAVAN, r: 1.6, c: C.fnd, d: 2.3 },
+        { t: 'ring', at: CARAVAN, r: 1.4, c: C.fnd, d: 2.3 },
         { t: 'tag', at: CARAVAN, text: 'Caravana original', c: C.fnd, dx: -3, dy: 4, d: 2.6 },
       ]} /></div><figcaption><b>Ubicación en The Park.</b> {sat}</figcaption></figure>
     </div>,
@@ -491,7 +490,7 @@ export const STEPS: Step[] = [
   {
     b: 6, t: 'Christiania aprende haciendo', d: 'Reparar, construir, reutilizar materiales y resolver problemas cotidianos.',
     v: () => <Pair items={[
-      { img: 'chr_glasshouse', cap: <><b>Casa de vidrio sobre la muralla, construida con ventanas reutilizadas.</b> Seier+Seier, CC BY 2.0.</>, anns: [{ t: 'ring', at: [0.36, 0.38], r: 6, c: C.hl, d: 0.8 }] },
+      { img: 'chr_glasshouse', cap: <><b>Casa de vidrio sobre la muralla, construida con ventanas reutilizadas.</b> Seier+Seier, CC BY 2.0.</> },
       { img: 'chr_stadsgraven', cap: <><b>Autoconstrucción frente al foso.</b> Stig Nygaard, CC BY 2.0.</> },
     ]} />,
     nota: 'La segunda dimensión del enfoque económico es el conocimiento. En Christiania, una parte importante del aprendizaje se produce mediante la práctica: reparar, construir, reutilizar materiales, mantener talleres y resolver problemas cotidianos.',
@@ -499,10 +498,8 @@ export const STEPS: Step[] = [
   {
     b: 6, t: 'Christiania Bike: de una necesidad a un producto', d: 'Un barrio sin carros necesitaba mover niños y carga en bicicleta.',
     v: () => <Photo img="chr_bike" anns={[
-      { t: 'box', a: [0.3, 0.04], b: [0.8, 0.7], c: C.chr, d: 0.5 },
-      { t: 'tag', at: [0.8, 0.3], text: 'Caja de carga delantera', c: C.chr, dx: 4, d: 1.3 },
-      { t: 'ring', at: [0.55, 0.83], r: 6, c: C.hl, d: 1.8 },
-      { t: 'tag', at: [0.55, 0.95], text: 'Dos ruedas delanteras: triciclo estable', c: C.hl, dx: 8, d: 2.4 },
+      { t: 'tag', at: [0.65, 0.35], text: 'Caja de carga delantera', c: C.chr, dy: -3, d: 0.8 },
+      { t: 'tag', at: [0.55, 0.85], text: 'Triciclo con dos ruedas delanteras', c: C.hl, dy: 3, d: 1.4 },
     ]} />,
     src: 'Fotografía: Maurizio Ceol, CC BY 3.0. Historia: Christiania Bikes, “Our history”.',
     nota: 'Un ejemplo es Christiania Bike, una bicicleta de carga asociada al entorno de Christiania que convirtió una necesidad práctica de movilidad en un producto con difusión comercial internacional.',
@@ -532,7 +529,7 @@ export const STEPS: Step[] = [
   {
     b: 6, t: 'Findhorn enseña de forma formal', d: 'Cursos, talleres, programas y experiencias de construcción ecológica.',
     v: () => <Pair items={[
-      { img: 'fnd_ecovivienda', cap: <><b>Vivienda ecológica con colectores solares.</b> Anne Burgess, CC BY-SA 2.0.</>, anns: [{ t: 'box', a: [0.07, 0.2], b: [0.4, 0.38], c: C.hl, d: 0.8 }, { t: 'tag', at: [0.24, 0.2], text: 'Colectores solares', c: C.hl, dy: -4, d: 1.6 }] },
+      { img: 'fnd_ecovivienda', cap: <><b>Vivienda ecológica con colectores solares.</b> Anne Burgess, CC BY-SA 2.0.</>, anns: [{ t: 'tag', at: [0.24, 0.22], text: 'Colectores solares', c: C.hl, dy: -3, d: 1.2 }] },
       { img: 'fnd_barril', cap: <><b>Casa de barril de whisky.</b> Chiswick Chap, CC BY-SA 3.0.</> },
     ]} />,
     nota: 'En Findhorn, el conocimiento se ha transmitido de manera más formal mediante cursos, talleres, programas educativos y experiencias de construcción ecológica. Las Eco-houses permiten explorar cómo las decisiones de diseño, los materiales y las estrategias de eficiencia energética pueden reducir impactos durante el uso de una vivienda.',
@@ -650,11 +647,8 @@ export const STEPS: Step[] = [
   {
     b: 9, t: 'Findhorn incorpora tecnologías ecológicas a sus servicios', d: 'La Living Machine, primera de Europa (1995), diseñada por John Todd.',
     v: () => <Photo img="fnd_livingmachine" anns={[
-      { t: 'line', pts: [[0.02, 0.28], [0.5, 0.02], [0.98, 0.28]], c: C.hl, w: 0.5, d: 0.5 },
-      { t: 'tag', at: [0.5, 0.05], text: 'Invernadero', c: C.hl, dx: 8, dy: 3, d: 1.2 },
-      { t: 'ring', at: [0.14, 0.62], r: 6, c: C.fnd, d: 1.7 },
-      { t: 'ring', at: [0.86, 0.62], r: 6, c: C.fnd, d: 1.9 },
-      { t: 'tag', at: [0.86, 0.62], text: 'Tanques con plantas\ny microorganismos', c: C.fnd, dx: -8, dy: 8, d: 2.4 },
+      { t: 'tag', at: [0.5, 0.08], text: 'Invernadero de la Living Machine', c: C.hl, dy: 3, d: 0.8 },
+      { t: 'tag', at: [0.82, 0.65], text: 'Tanques abiertos de depuración biológica', c: C.fnd, dy: 3, d: 1.4 },
     ]} />,
     src: 'Fotografía: Julian Paren (geograph.org.uk), CC BY-SA 2.0. Celebrating One Incredible Family (2024); The Ecologist (2010).',
     nota: 'Findhorn permite observar con mayor claridad la incorporación de tecnologías ecológicas a los servicios del asentamiento. Una de ellas es la Living Machine, un sistema de tratamiento biológico de aguas residuales que utiliza procesos naturales y organismos vivos para contribuir a la depuración del agua.',
@@ -682,7 +676,7 @@ export const STEPS: Step[] = [
   {
     b: 9, t: 'El parque eólico de Findhorn', d: 'De un aerogenerador de 75 kW en 1989 a 750 kW desde 2006; los excedentes se venden a la red.',
     v: () => <div className="pair" style={{ ['--n' as any]: 2 }}>
-      <figure className="po"><div style={{ minHeight: 0 }}><Photo img="fnd_eolico" anns={[{ t: 'ring', at: [0.045, 0.3], r: 3, c: C.hl, d: 0.6 }, { t: 'ring', at: [0.47, 0.3], r: 3, c: C.hl, d: 0.8 }, { t: 'ring', at: [0.88, 0.3], r: 3, c: C.hl, d: 1 }]} /></div><figcaption><b>Aerogeneradores de Findhorn.</b> W. L. Tarbert, dominio público.</figcaption></figure>
+      <figure className="po"><div style={{ minHeight: 0 }}><Photo img="fnd_eolico" /></div><figcaption><b>Aerogeneradores de Findhorn.</b> W. L. Tarbert, dominio público.</figcaption></figure>
       <figure className="po" style={{ animationDelay: '.3s' }}><div style={{ minHeight: 0 }}><GeoMap site="findhorn" bbox={[-3.5870, 57.6535, -3.5735, 57.6595]} base="sat" plan dim={0.15} anns={[
         ...WIND.map((p, i) => ({ t: 'ring', at: p, r: 1.4, c: C.hl, d: 1 + i * 0.25, pulse: true } as Ann)),
         { t: 'tag', at: WIND[1], text: 'Aerogeneradores (OSM)', c: C.hl, dx: -6, dy: 5, d: 2 },
@@ -814,7 +808,7 @@ export const STEPS: Step[] = [
   {
     b: 11, t: 'Adaptar la caja común a la economía circular', d: 'Recicladores de María Paz y Patio Bonito, en relación con las dinámicas de Corabastos.',
     v: () => <div className="pair" style={{ ['--n' as any]: 2 }}>
-      <figure className="po"><div style={{ minHeight: 0 }}><Photo img="ken_corabastos" anns={[{ t: 'box', a: [0.35, 0.35], b: [0.92, 0.72], c: C.hl, d: 0.6 }, { t: 'tag', at: [0.63, 0.35], text: 'Bodegas de la central de abastos', c: C.hl, dy: -4, d: 1.4 }]} /></div><figcaption><b>Corabastos desde el aire (2018).</b> Felipe Restrepo Acosta, CC BY-SA 4.0.</figcaption></figure>
+      <figure className="po"><div style={{ minHeight: 0 }}><Photo img="ken_corabastos" anns={[{ t: 'tag', at: [0.63, 0.42], text: 'Central de abastos (Corabastos)', c: C.hl, dy: -3, d: 1.0 }]} /></div><figcaption><b>Corabastos desde el aire (2018).</b> Felipe Restrepo Acosta, CC BY-SA 4.0.</figcaption></figure>
       <figure className="po" style={{ animationDelay: '.3s' }}><div style={{ minHeight: 0 }}><GeoMap site="kennedy" bbox={[-74.168, 4.624, -74.150, 4.645]} base="sat" dim={0.3} anns={[
         { t: 'ring', at: CORA, r: 2.2, c: C.hl, d: 0.6 },
         { t: 'tag', at: CORA, text: 'Corabastos', c: C.hl, dx: 4, dy: 3, d: 0.9 },

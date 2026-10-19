@@ -455,31 +455,39 @@ svg.vis { width: 100%; height: 100%; display: block; }
 
 .scene.out .anns, .scene.out .mapctl, .scene.out .hint, .scene.out .tip { opacity: 0; transition: opacity .5s; }
 
-/* ===== imagen más grande: texto compacto ===== */
-.top2 { padding: 8px 18px; gap: 16px; }
-.top2 .brand b { font-size: 14px; }
+/* ===== imagen más grande: visor maximizado y texto compacto ===== */
+.top2 { padding: 4px 14px; gap: 12px; }
+.top2 .brand b { font-size: 13px; }
 .top2 .brand span { display: none; }
-.title5 { padding: 8px 18px 4px; gap: 4px; grid-template-columns: 1fr; }
-.title5 .kick { min-height: 22px; font-size: 11px; gap: 8px; }
-.title5 .kick .sc-ico { width: 22px; height: 22px; border-radius: 6px; }
-.title5 .kick .sc-ico svg { width: 14px; height: 14px; }
-.title5 h1 { font-size: clamp(22px, 2.15vw, 34px); max-width: none; letter-spacing: -.025em; line-height: 1.08; }
-.title5 .sub { min-height: 22px; }
-.title5 .dek { font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
-.focus5 { padding: 3px 12px 3px 4px; font-size: 14px; }
-.focus5 .fi { width: 22px; height: 22px; }
-.stage5 { margin: 4px 12px 0; border-radius: 14px; }
-.stage5 .scene { inset: 6px; }
-.foot5 { padding: 6px 18px 8px; gap: 4px; }
-.src5 { font-size: 10px; }
-.row5 .scrub { height: 22px; }
-.row5 .nav button { height: 34px; padding: 0 14px; font-size: 13px; }
-.clickhint { bottom: 10px; padding: 5px 12px; font-size: 11.5px; }
+.top2 .chips button { padding: 3px 9px; font-size: 11px; gap: 5px; }
+.top2 .chips button span { font-size: 10px; }
+.title5 { padding: 4px 14px 2px; gap: 2px; grid-template-columns: 1fr; }
+.title5 .kick { min-height: 16px; font-size: 10px; gap: 6px; }
+.title5 .kick .sc-ico { width: 18px; height: 18px; border-radius: 4px; }
+.title5 .kick .sc-ico svg { width: 12px; height: 12px; }
+.title5 h1 { font-size: clamp(16px, 1.45vw, 22px); max-width: none; letter-spacing: -.02em; line-height: 1.15; margin: 0; }
+.title5 .sub { min-height: 16px; }
+.title5 .dek { font-size: 12px; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.focus5 { padding: 2px 8px 2px 4px; font-size: 11.5px; gap: 6px; border-radius: 999px; }
+.focus5 .fi { width: 18px; height: 18px; }
+.focus5 b { font-size: 10.5px; }
+.stage5 { margin: 2px 8px 0; border-radius: 10px; flex: 1; }
+.stage5 .scene { inset: 0; }
+.foot5 { padding: 3px 14px 6px; gap: 2px; }
+.src5 { font-size: 9.5px; line-height: 1.2; }
+.row5 .scrub { height: 16px; }
+.row5 .nav button { height: 28px; padding: 0 12px; font-size: 12px; border-radius: 6px; }
+.clickhint { bottom: 8px; padding: 4px 10px; font-size: 11px; }
+.pair { gap: 8px; }
+.pair > figure { display: flex; flex-direction: column; min-height: 0; height: 100%; }
+.pair > figure > div { flex: 1; min-height: 0; }
+.pair figcaption { padding-top: 3px; font-size: 10px; line-height: 1.3; }
+
 @media (max-width: 900px), (orientation: portrait) and (max-width: 1100px) {
-  .title5 h1 { font-size: 21px; min-height: 0; }
-  .title5 .dek { white-space: normal; font-size: 13px; }
-  .stage5 { height: 66vh; margin: 2px 6px 0; }
-  .stage5 .scene { inset: 4px; }
-  .top2 { padding: 8px 10px 6px; }
-  .row5 .nav button { height: 46px; }
+  .title5 h1 { font-size: 18px; min-height: 0; }
+  .title5 .dek { white-space: normal; font-size: 11.5px; }
+  .stage5 { height: 72vh; margin: 2px 4px 0; }
+  .stage5 .scene { inset: 0; }
+  .top2 { padding: 6px 10px 4px; }
+  .row5 .nav button { height: 42px; }
 }
